@@ -16,7 +16,7 @@ class Player:
     """
 
     def __init__(self):
-        self.resources: Dict[Resource, int] = {res: 3 for res in Resource}
+        self.resources: Dict[Resource, int] = {res: 0 for res in Resource}
         self.development_cards = {d: 0 for d in DevelopmentCard}
         self.connected_harbors = set()
         self.number_played_knights = 0
