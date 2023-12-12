@@ -6,7 +6,7 @@ import sys
 import math
 import random
 
-# Create a Catan game with a beginner board
+# Create a Catan game with a beginner boards
 game = Game(BeginnerBoard(), 2)
 renderer = BoardRenderer(game.board)
 
@@ -89,6 +89,9 @@ def move_robber(player):
     game.board.robber = hex_coords
     # Choose a player to steal a card from
     potential_players = list(game.board.get_players_on_hex(hex_coords))
+    if not potential_players:
+        print("No potential players to steal from.")
+        return
     print("Choose who you want to steal from:")
     for p in potential_players:
         i = game.players.index(p)
@@ -102,21 +105,6 @@ def move_robber(player):
         to_steal_from.remove_resources({resource: 1})
         print("Stole 1 %s for player %d" % (resource, p + 1))
 
-# Player order for settlements and roads building
-player_order = list(range(len(game.players)))
-for i in player_order + list(reversed(player_order)):
-    current_player = game.players[i]
-    print("Player %d, it is your turn!" % (i + 1))
-    coords = choose_intersection(game.board.get_valid_settlement_coords(current_player, ensure_connected=False),
-                                 "Where do you want to build your settlement? ")
-    game.build_settlement(player=current_player, coords=coords, cost_resources=False, ensure_connected=False)
-    current_player.add_resources(game.board.get_hex_resources_for_intersection(coords))
-    # Print the road options
-    road_options = game.board.get_valid_road_coords(current_player, connected_intersection=coords)
-    road_coords = choose_path(road_options, "Where do you want to build your road to? ")
-    game.build_road(player=current_player, path_coords=road_coords, cost_resources=False)
-
-# Counts how many resource cards a player has and returns an array with those counts
 def count_cards(game):
     card_totals = []
     for player in game.players:
@@ -124,7 +112,7 @@ def count_cards(game):
         card_totals.append(total)
     return card_totals
 
-
+# takes any player over 7 cards and performs the discard action randomly
 def resource_check(card_totals, game):
     for i, total in enumerate(card_totals):
         if total > 7:
@@ -150,6 +138,22 @@ def resource_check(card_totals, game):
             # print(f"Player {i + 1} discarded {cards_to_discard}. Remaining cards: {player.resources}")
             print(f"Player {i + 1} discarded {cards_to_discard}")
 
+# Player order for settlements and roads building
+player_order = list(range(len(game.players)))
+for i in player_order + list(reversed(player_order)):
+    current_player = game.players[i]
+    print("Player %d, it is your turn!" % (i + 1))
+    coords = choose_intersection(game.board.get_valid_settlement_coords(current_player, ensure_connected=False),
+                                 "Where do you want to build your settlement? ")
+    game.build_settlement(player=current_player, coords=coords, cost_resources=False, ensure_connected=False)
+    current_player.add_resources(game.board.get_hex_resources_for_intersection(coords))
+    # Print the road options
+    road_options = game.board.get_valid_road_coords(current_player, connected_intersection=coords)
+    road_coords = choose_path(road_options, "Where do you want to build your road to? ")
+    game.build_road(player=current_player, path_coords=road_coords, cost_resources=False)
+
+# Counts how many resource cards a player has and returns an array with those counts
+
 # Main game loop
 current_player_num = 0
 while True:
@@ -157,7 +161,7 @@ while True:
     print("Player %d, it is your turn now" % (current_player_num + 1))
     # Roll the dice
     dice = random.randint(1, 6) + random.randint(1, 6)
-    # dice = 7 # for testing robber
+    # dice = 7 # for testing robb`er
     print("Player %d rolled a %d" % (current_player_num + 1, dice))
     if dice == 7:
         card_totals = count_cards(game)
@@ -167,7 +171,6 @@ while True:
     else:
         game.add_yield_for_roll(dice)
     choice = 0
-    current_player.development_cards[DevelopmentCard.KNIGHT] = 0
     while choice != 4:
         print(game.board)
         print("Current Victory point standings:")
@@ -201,13 +204,13 @@ while True:
             print("2 - City")
             print("3 - Road")
             print("4 - Development Card")
+            print("5 - Back")
             while True:
-                try:
-                    building_choice = int(input('->  '))
-                    if 1 <= building_choice <= 4:
-                        break  # Valid choice, exit the loop
-                except ValueError:
-                    print("Invalid input. Please enter a number.")
+                building_choice = int(input('->  '))
+                if not 1<= building_choice <=5:
+                    print("Invalid input. Please enter a new number.")
+                else:
+                    break
             if building_choice == 1:
                 if not current_player.has_resources(BuildingType.SETTLEMENT.get_required_resources()):
                     print("You don't have enough resources to build a settlement")
@@ -253,6 +256,8 @@ while True:
                 # Build a card and tell the player what they build
                 dev_card = game.build_development_card(current_player)
                 print("You built a %s card" % dev_card)
+            elif building_choice == 5:
+                break
 
         elif choice == 2:
             possible_trades = list(current_player.get_possible_trades())
