@@ -12,7 +12,6 @@ game = Game(BeginnerBoard(), 2)
 renderer = BoardRenderer(game.board)
 
 
-newfeature = Features(game, game.players[0])
 
 
 # Function to sort coordinates based on (x, y)
