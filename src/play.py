@@ -5,10 +5,15 @@ import random
 import sys
 import math
 import random
+from features import Features
 
 # Create a Catan game with a beginner boards
 game = Game(BeginnerBoard(), 2)
 renderer = BoardRenderer(game.board)
+
+
+newfeature = Features(game, game.players[0])
+
 
 # Function to sort coordinates based on (x, y)
 def get_coord_sort_by_xy(c):
@@ -161,7 +166,7 @@ while True:
     print("Player %d, it is your turn now" % (current_player_num + 1))
     # Roll the dice
     dice = random.randint(1, 6) + random.randint(1, 6)
-    # dice = 7 # for testing robb`er
+    # dice = 7 # for testing robber
     print("Player %d rolled a %d" % (current_player_num + 1, dice))
     if dice == 7:
         card_totals = count_cards(game)
