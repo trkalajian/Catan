@@ -31,8 +31,8 @@ class ActorCritic(agent.HeuristicAgent):
     #number of actions for diving theta into subsets
     numActions = 7
     
-    def __init__(self, build_settlement_func, place_settlement_func, place_road_func):
-        super().__init__(self.policy,build_settlement_func, place_settlement_func, place_road_func)
+    def __init__(self, place_settlement_func, place_road_func, place_robber_func, choose_best_trade, place_city_func):
+        super().__init__(self.policy, place_settlement_func, place_road_func, place_robber_func, choose_best_trade, place_city_func)
         self.fallOff = None
         #theta are the policyweights
         self.firstInitialization = True
