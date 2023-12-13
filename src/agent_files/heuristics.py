@@ -12,7 +12,7 @@ def build_settlement(game, current_player_num):
     if current_player.has_resources(BuildingType.SETTLEMENT.get_required_resources()):
         valid_settlement_coords = game.board.get_valid_settlement_coords(current_player, ensure_connected=False)
         if valid_settlement_coords:
-            return 1
+            return [1, 1]
 
 
 def place_settlement(game, current_player_num, is_start):
@@ -41,6 +41,20 @@ def place_settlement(game, current_player_num, is_start):
 
     return None  # Return None if no valid settlement coordinates are found
 
+# function to output the selections for building a road
+def build_roads(game, current_player_num):
+    current_player = game.players[current_player_num]
+
+    # Check if the player has enough resources to build a road
+    if current_player.has_resources(BuildingType.ROAD.get_required_resources()):
+        valid_road_coords = game.board.get_valid_road_coords(current_player, ensure_connected=True)
+        if valid_road_coords:
+            return [1, 3]
+
+    return None  # Return None if no valid road placement is found or not enough resources
+
+
+# choose where to place road
 def choose_road_placement(game, current_player_num):
     current_player = game.players[current_player_num]
     valid_road_coords = game.board.get_valid_road_coords(current_player, ensure_connected=True)
@@ -67,12 +81,30 @@ def choose_road_placement(game, current_player_num):
 
     return None  # Return None if no valid road placement is found
 
-# def choose where to place road
-    # if road connects to another road yes
-    # else randomly choose among viable spots
 
-# def choose to build dev card:
-    # if resources are available and dev cards are available, buy
+def build_cities(game, current_player_num):
+    current_player = game.players[current_player_num]
+
+    # Check if the player has enough resources to build a city
+    if current_player.has_resources(BuildingType.CITY.get_required_resources()):
+        valid_city_coords = game.board.get_valid_city_coords(current_player)
+        if valid_city_coords:
+            return [1, 2]
+
+    return None  # Return None if no valid city placement is found or not enough resources
+
+
+def build_dev_card(game, current_player_num):
+    current_player = game.players[current_player_num]
+
+    # Check if the player has enough resources to build a development card
+    if current_player.has_resources(DevelopmentCard.get_required_resources()):
+        # Check if there are development cards available
+        if game.development_card_deck:
+            return [1, 4]  # or any specific value you use to indicate the action to buy a development card
+
+    return False  # Return False if conditions are not met
+
 
 # def place robber:
     # Choose highest production tile of the current point leader that you also don't occupy
