@@ -31,12 +31,16 @@ class Game:
         self.players = [Player() for i in range(num_players)]
         self.longest_road_owner = None
         self.largest_army_owner = None
+        # self.development_card_deck = (
+        #     14 * [DevelopmentCard.KNIGHT]
+        #     + 5 * [DevelopmentCard.VICTORY_POINT]
+        #     + 2 * [DevelopmentCard.ROAD_BUILDING]
+        #     + 2 * [DevelopmentCard.YEAR_OF_PLENTY]
+        #     + 2 * [DevelopmentCard.MONOPOLY]
+        # )
         self.development_card_deck = (
-            14 * [DevelopmentCard.KNIGHT]
-            + 5 * [DevelopmentCard.VICTORY_POINT]
-            + 2 * [DevelopmentCard.ROAD_BUILDING]
-            + 2 * [DevelopmentCard.YEAR_OF_PLENTY]
-            + 2 * [DevelopmentCard.MONOPOLY]
+                14 * [DevelopmentCard.KNIGHT]
+                + 5 * [DevelopmentCard.VICTORY_POINT]
         )
 
         shuffle(self.development_card_deck)
