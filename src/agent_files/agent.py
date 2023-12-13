@@ -1,4 +1,4 @@
-from heuristics import build_settlement_heursitic
+# from heuristics import build_settlement, place_settlement
 
 def q_learning(action_values, old_state, action, reward, new_state, alpha, gamma):
     new_action = greedy(action_values[new_state])
@@ -7,7 +7,7 @@ def q_learning(action_values, old_state, action, reward, new_state, alpha, gamma
     )
     return None
 
-class EpsilonGreedyDQNPolicy:
+class EpsilonGreedyPolicy:
     def __init__(self, q_network, initial_epsilon, min_epsilon, random_state=None):
         self.q_network = q_network
         self.epsilon = initial_epsilon
@@ -31,3 +31,25 @@ class EpsilonGreedyDQNPolicy:
             q_values = self.q_network(state_tensor)
             return POSSIBLE_ACTIONS[int(torch.argmax(q_values))]
 
+
+# class to initialize the heuristic agent
+class HeuristicAgent:
+    def __init__(self, policy, build_settlement_func, place_settlement_func, place_road_func) :
+        self.policy = policy
+        self.build_settlement_func = build_settlement_func
+        self.place_settlement_func = place_settlement_func
+        self.place_road = place_road_func
+
+    def choose_action(self, game, current_player_num, is_start):
+        # Implement your heuristic policy logic here
+        action = self.policy(game, current_player_num, is_start)
+        return action
+
+    def place_settlement(self, game, current_player_num, is_start):
+        # Call the heuristic function to choose the settlement location
+        settlement_coords = self.place_settlement_func(game, current_player_num, is_start)
+        return settlement_coords  # Return the chosen settlement coordinates
+
+    def place_road(self, game, current_player_num):
+        road_coords = self.place_road(game, current_player_num)
+        return road_coords
