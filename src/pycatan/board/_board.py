@@ -573,6 +573,40 @@ class Board:
             ]
         )
 
+
+    def get_average_neighbor(self, coords: Coords) -> float:
+        """
+        Calculate the average value of neighboring hexes of the given coordinates based on a specific scoring system.
+
+        Args:
+            coords: The coordinates of the intersection or path.
+
+        Returns:
+            The average value of neighboring hexes based on the scoring system.
+        """
+        connected_hexes = self.get_hexes_connected_to_intersection(coords)
+        total_value = 0
+
+        for hex_coords in connected_hexes:
+            if hex_coords in self.hexes:
+                token = self.hexes[hex_coords].token_number
+                # Scoring system
+                if token in [2, 12]:
+                    value = 1
+                elif token in [3, 11]:
+                    value = 2
+                elif token in [4, 10]:
+                    value = 3
+                elif token in [5, 9]:
+                    value = 4
+                elif token in [6, 8]:
+                    value = 5
+                else:
+                    value = 0  # In case of other numbers or no token
+
+                total_value += value
+        return total_value
+
     def __str__(self):
         from ._board_renderer import BoardRenderer
 
