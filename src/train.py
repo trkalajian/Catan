@@ -1,6 +1,6 @@
 from pycatan import Game, DevelopmentCard, Resource
 from pycatan.board import BeginnerBoard, BoardRenderer, BuildingType
-#from methods import choose_path, choose_intersection, choose_resource, move_robber, count_cards, resource_check, choose_hex, get_coord_sort_by_xy
+from methods import choose_path, choose_intersection, choose_resource, move_robber, count_cards, resource_check, choose_hex, get_coord_sort_by_xy
 from agent_files.heuristics import heuristic_policy
 from agent_files.agent import HeuristicAgent
 from agent_files.heuristics import build_settlement, place_settlement, heuristic_policy, choose_road_placement
