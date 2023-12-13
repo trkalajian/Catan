@@ -1,26 +1,71 @@
 # following are heuristics to code for when to choose certain actions.
 from pycatan import Game, DevelopmentCard, Resource
 from pycatan.board import BeginnerBoard, BoardRenderer, BuildingType
+import random
 
 # build_settlement, if resources are available and a viable location exists, build
-def build_settlement_heuristic(game, current_player_num, is_start):
+def build_settlement(game, current_player_num):
     current_player = game.players[current_player_num]
 
     # Check if the player has enough resources to build a settlement
+
     if current_player.has_resources(BuildingType.SETTLEMENT.get_required_resources()):
         valid_settlement_coords = game.board.get_valid_settlement_coords(current_player, ensure_connected=False)
         if valid_settlement_coords:
-            settlement_coords = valid_settlement_coords[0]  # Choose the first valid location (you can modify this)
-            game.build_settlement(current_player, settlement_coords, cost_resources=False, ensure_connected=False)
-            current_player.add_resources(game.board.get_hex_resources_for_intersection(settlement_coords))
-            # Print a message indicating that a settlement is built using the heuristic
-            print(f"Player {current_player_num + 1} built a settlement using the heuristic at {settlement_coords}")
+            return 1
 
-# def choose where to place settlement
-    # max average value each available intersection
 
-# def choose to build road
-    # if resources are available and longest_road == no or viable settlement spots == 0
+def place_settlement(game, current_player_num, is_start):
+    current_player = game.players[current_player_num]
+
+    # Check if the player has enough resources to build a settlement
+    if is_start:
+        valid_settlement_coords = game.board.get_valid_settlement_coords(current_player, ensure_connected=False)
+    else:
+        valid_settlement_coords = game.board.get_valid_settlement_coords(current_player, ensure_connected=True)
+
+    if valid_settlement_coords:
+        best_coords = None
+        best_int_value = -1  # Initialize to a low value
+
+        for coords in valid_settlement_coords:
+            intersection_value = game.board.get_average_neighbor(coords)
+            total_value = 0
+            num_neighbors = 0
+            if intersection_value > best_int_value:
+                best_coords = coords
+                best_int_value = intersection_value
+
+        if best_coords:
+            return best_coords
+
+    return None  # Return None if no valid settlement coordinates are found
+
+def choose_road_placement(game, current_player_num):
+    current_player = game.players[current_player_num]
+    valid_road_coords = game.board.get_valid_road_coords(current_player, ensure_connected=True)
+
+    if valid_road_coords:
+        best_road_coords = None
+        highest_neighbor_value = -1  # Starting with a low value
+
+        for path_coords in valid_road_coords:
+            for coords in path_coords:
+                # Check if the road leads to a new intersection
+                if game.board.intersections[coords].building is None or game.board.intersections[coords].building.owner == current_player:
+                    intersection_value = game.board.get_average_neighbor(coords)
+
+                    # Select the road leading to the intersection with the highest value
+                    if intersection_value > highest_neighbor_value:
+                        best_road_coords = path_coords
+                        highest_neighbor_value = intersection_value
+
+        return best_road_coords
+
+    return None  # Return None if no valid road placement is found
+
+
+    return None  # Return None if no valid road placement is found
 
 # def choose where to place road
     # if road connects to another road yes
@@ -46,6 +91,10 @@ def build_settlement_heuristic(game, current_player_num, is_start):
 # def resource_production (add to _player.py maybe)
     # +1 for (2,12), +2 for (3, 11), +3 for (4,10), +4 for (5,9), +5 for (6,8) for each resource you have
 
-#
+def heuristic_policy(game, current_player_num, is_start):
+    # hierarchy of selecting actions
+
+    build_settlement(game, current_player_num)
+
 
 
