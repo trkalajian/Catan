@@ -1,4 +1,4 @@
-from colored import stylize, fg, bg
+from colored import stylize, fore_rgb, back_rgb
 # from termcolor import colored
 from typing import Optional, Dict, Tuple
 
@@ -14,7 +14,7 @@ from .._resource import Resource
 
 
 class BoardRenderer:
-    DEFAULT_PLAYER_COLORS = ["#00c40d", "#ff00d9", "#0000FF", "#00FFFF"]
+    DEFAULT_PLAYER_COLORS = [(0, 196, 13), (255, 0, 217), (0, 0, 255), (0, 255, 255)]
 
     DEFAULT_HEX_COLORS = {
         HexType.FIELDS: (255, 234, 41),  # RGB for "#ffea29"
@@ -44,7 +44,7 @@ class BoardRenderer:
         resource_color_map: Optional[Dict[Resource, str]] = DEFAULT_RESOURCE_COLORS,
     ):
         self.board = board
-        self._unused_player_colors = BoardRenderer.DEFAULT_PLAYER_COLORS
+        self._unused_player_colors = BoardRenderer.DEFAULT_PLAYER_COLORS[:]
         self.player_color_map = player_color_map
         self.hex_color_map = hex_color_map
         self.resource_color_map = resource_color_map
@@ -55,22 +55,22 @@ class BoardRenderer:
         return self.player_color_map[player]
 
     def _get_path(self, chars, path, path_labels):
-        fore = "#9c7500"
+        fore = (156, 117, 0)
         back = self.hex_color_map[HexType.DESERT]
         if path.building is not None:
             fore = self._get_player_color(path.building.owner)
         elif frozenset(path.path_coords) in self.board.harbors:
-            fore = "#000000"
+            fore = (0, 0, 0)
         if path in path_labels:
             chars = [path_labels[path]] * len(chars)
-        return list(map(lambda x: stylize(x, fg(fore) + bg(back)), chars))
+        return list(map(lambda x: stylize(x, fore_rgb(fore[0], fore[1], fore[2]) + back_rgb(back[0], back[1], back[2])), chars))
 
     def _get_intersection(self, char, intersection, intersection_labels):
-        fore = "#9c7500"
+        fore = (156, 117, 0)
         back = self.hex_color_map[HexType.DESERT]
         if intersection in intersection_labels:
             return [
-                stylize(intersection_labels[intersection], fg("#000000") + bg(back))
+                stylize(intersection_labels[intersection], fore_rgb(0, 0, 0) + back_rgb(back[0], back[1], back[2]))
             ]
         if intersection.building is not None:
             fore = self._get_player_color(intersection.building.owner)
@@ -79,19 +79,19 @@ class BoardRenderer:
                 if intersection.building.building_type is BuildingType.SETTLEMENT
                 else "c"
             )
-        return [stylize(char, fg(fore) + bg(back))]
+        return [stylize(char, fore_rgb(fore[0], fore[1], fore[2]) + back_rgb(back[0], back[1], back[2]))]
 
     def _get_hex_center(self, h, hex_labels):
-        space = stylize(" ", bg(self.hex_color_map[h.hex_type]))
+        space = stylize(" ", back_rgb(self.hex_color_map[h.hex_type][0], self.hex_color_map[h.hex_type][1], self.hex_color_map[h.hex_type][2]))
         if h in hex_labels:
             return [space, space, hex_labels[h], space, space]
         if h.token_number is None:
             return [space] * 5
         token_color = (
-            "#FF0000" if h.token_number == 6 or h.token_number == 8 else "#000000"
+            (255, 0, 0) if h.token_number == 6 or h.token_number == 8 else (0, 0, 0)
         )
         token_chars = [space if h.token_number < 10 else ""] + [
-            stylize(h.token_number, fg(token_color) + bg("#FFFFFF"))
+            stylize(h.token_number, fore_rgb(token_color[0], token_color[1], token_color[2]) + back_rgb(self.hex_color_map[h.hex_type][0], self.hex_color_map[h.hex_type][1], self.hex_color_map[h.hex_type][2]))
         ]
         return [space] + [t for t in token_chars] + [space, space]
 
@@ -141,7 +141,7 @@ class BoardRenderer:
     def _get_harbor(self, harbor):
         fore = (255, 255, 255) if harbor.resource is None else self.resource_color_map[harbor.resource]
         return [
-            [stylize("3" if harbor.resource is None else "2", fg(fore) + bg(self.WATER_COLOR))]
+            [stylize("3" if harbor.resource is None else "2", fore_rgb(fore[0], fore[1], fore[2]) + back_rgb(self.WATER_COLOR[0], self.WATER_COLOR[1], self.WATER_COLOR[2]))]
         ]
 
     def _get_harbor_coords(self, harbor):
@@ -208,7 +208,7 @@ class BoardRenderer:
         """
         size = 20, 55
         buf = [
-            [stylize(" ", bg(BoardRenderer.WATER_COLOR)) for j in range(size[1])]
+            [stylize(" ", back_rgb(BoardRenderer.WATER_COLOR[0], BoardRenderer.WATER_COLOR[1], BoardRenderer.WATER_COLOR[2])) for j in range(size[1])]
             for i in range(size[0])
         ]
 
@@ -231,7 +231,7 @@ class BoardRenderer:
         x, y = self._get_hex_center_coords(self.board.robber)
         self._copy_into_array(
             buf,
-            [[stylize("R", fg("#FFFFFF") + bg("#000000"))]],
+            [[stylize("R", fore_rgb(255, 255, 255) + back_rgb(0, 0, 0))]],
             center[0] + x + 4,
             center[1] + y + 1,
         )
