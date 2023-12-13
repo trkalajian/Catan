@@ -8,13 +8,15 @@ class DevelopmentCard(Enum):
 
     KNIGHT = 0
     """The knight card"""
-    YEAR_OF_PLENTY = 1
-    """The year of plenty card"""
-    ROAD_BUILDING = 2
-    """The road building card"""
-    MONOPOLY = 3
-    """The monopoly card"""
-    VICTORY_POINT = 4
+    # YEAR_OF_PLENTY = 1
+    # """The year of plenty card"""
+    # ROAD_BUILDING = 2
+    # """The road building card"""
+    # MONOPOLY = 3
+    # """The monopoly card"""
+    # VICTORY_POINT = 4
+    # """Generic type to represent the victory point cards (i.e. library)"""
+    VICTORY_POINT = 1
     """Generic type to represent the victory point cards (i.e. library)"""
 
     @staticmethod
@@ -28,11 +30,13 @@ class DevelopmentCard(Enum):
 
     def __str__(self):
         return {
+            # DevelopmentCard.KNIGHT: "Knight",
+            # DevelopmentCard.YEAR_OF_PLENTY: "Year of Plenty",
+            # DevelopmentCard.ROAD_BUILDING: "Road Building",
+            # DevelopmentCard.VICTORY_POINT: "Victory Point",
+            # DevelopmentCard.MONOPOLY: "Monopoly",
             DevelopmentCard.KNIGHT: "Knight",
-            DevelopmentCard.YEAR_OF_PLENTY: "Year of Plenty",
-            DevelopmentCard.ROAD_BUILDING: "Road Building",
-            DevelopmentCard.VICTORY_POINT: "Victory Point",
-            DevelopmentCard.MONOPOLY: "Monopoly",
+            DevelopmentCard.VICTORY_POINT: "Victory Point"
         }[self]
 
     def __repl__(self):
