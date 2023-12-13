@@ -3,7 +3,6 @@ import numpy
 from pycatan import Game, Player, Resource
 from pycatan.board import Board
 
-
 #class helps to construct features for training
 #the feature array contains all of the data in a flattened and consistent form if needed
 
@@ -86,7 +85,7 @@ class Features():
 
     def flattenFeature(self, game:Game, player:Player):
         #function to flatten features so that they are in a consistent order and consumable by an agent
-
+        #feature order player VP, op VP, player resources, player yield, op resources, op yield, player settlementspots, op settlement spots, resource locations
         self.featuresArray.append(self.currentPlayerVictoryPoints)
         for plr in game.players:
                 if plr != player:

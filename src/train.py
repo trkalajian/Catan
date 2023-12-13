@@ -4,15 +4,27 @@ from methods import choose_path, choose_intersection, choose_resource, move_robb
 from agent_files.heuristics import heuristic_policy
 from agent_files.agent import HeuristicAgent
 from agent_files.heuristics import build_settlement, place_settlement, heuristic_policy, choose_road_placement
-
+import actorcritic
 import random
 import sys
 
 
+#initialize agents before starting games
+numAgents = 2
+agents = []
+
+for i in range(numAgents):
+    #change some of these to actor-critics when appropriate
+        
+    #agent = heuristic_agent_maker()
+    #agents.append(agent)
+    agents.append(actorcritic.ActorCritic(build_settlement_func=build_settlement,
+        place_settlement_func=place_settlement,
+        place_road_func=choose_road_placement))
 # Function to create a new board and game
 def create_new_game():
     board = BeginnerBoard()
-    game = Game(board, 2)
+    game = Game(board, numAgents)
     renderer = BoardRenderer(game.board)
     return game
 
@@ -32,18 +44,17 @@ current_player_num = 0
 is_start = False
 num_turns = 0
 max_turns = 10000  # Number of turns to play
-
 while num_turns < max_turns:
     # Create a new board and game for each iteration to reset the board
+
     game = create_new_game()
     renderer = BoardRenderer(game.board)
 
     # Creating players and setting the order
     player_order = list(range(len(game.players)))
-    agents = []
-    for i in range(len(player_order)):
-        agent = heuristic_agent_maker()
-        agents.append(agent)
+    
+ 
+
 
     is_start = False
     for i in player_order + list(reversed(player_order)):
@@ -51,6 +62,7 @@ while num_turns < max_turns:
         current_player = game.players[i]
         # coords = choose_intersection(game.board.get_valid_settlement_coords(current_player, ensure_connected=False),
         #                              "Where do you want to build your settlement? ")
+        agents[i].initializeEpisode(game, game.players[i])
         agent_coords = agents[i].place_settlement(game, i, is_start)
         game.build_settlement(player=current_player, coords=agent_coords, cost_resources=False, ensure_connected=False)
         current_player.add_resources(game.board.get_hex_resources_for_intersection(agent_coords))
@@ -144,6 +156,15 @@ while num_turns < max_turns:
                             player.remove_resources({resource: amount})
                             current_player.add_resources({resource: amount})
             if game.get_victory_points(current_player) >= 10:
+                for playerNumber in range(len(game.players)):
+                    if playerNumber == current_player_num:
+                        finalReward = 100
+                    else:
+                        finalReward = 0
+                    agent[playerNumber].terminateEpisode(finalReward)
+                        
+                
+                #we should start another game instead of exiting to train actor critic since it learns by taking actions
                 sys.exit(0)
 
         current_player_num = (current_player_num + 1) % len(game.players)

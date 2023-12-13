@@ -1,8 +1,9 @@
 {
   "ExpandedNodes": [
     "",
-    "\\src"
+    "\\src",
+    "\\src\\agent_files",
+    "\\src\\pycatan"
   ],
-  "SelectedNode": "\\src\\train.py",
   "PreviewInSolutionExplorer": false
 }
