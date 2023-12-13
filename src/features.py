@@ -64,6 +64,7 @@ class Features():
             for playerYield in currentYields:
                 if playerYield == player:
                     for resource in currentYields[player].total_yield:
+ 
                         if resource in self.averageYieldCurrentPlayer:
                             self.averageYieldCurrentPlayer[resource] += currentYields[player].total_yield[resource]*rollProbability
                         else:
@@ -84,6 +85,7 @@ class Features():
     
 
     def flattenFeature(self, game:Game, player:Player):
+        self.featuresArray = []
         #function to flatten features so that they are in a consistent order and consumable by an agent
         #feature order player VP, op VP, player resources, player yield, op resources, op yield, player settlementspots, op settlement spots, resource locations
         self.featuresArray.append(self.currentPlayerVictoryPoints)
@@ -93,11 +95,17 @@ class Features():
 
         for resource in Resource:
             self.featuresArray.append(self.currentPlayerResources[resource])
-            self.featuresArray.append(self.averageYieldCurrentPlayer[resource])
+            if resource in self.averageYieldCurrentPlayer:
+                self.featuresArray.append(self.averageYieldCurrentPlayer[resource])
+            else:
+                self.featuresArray.append(0)
             for plr in game.players:
                 if plr != player:
                     self.featuresArray.append(self.opponentResources[plr][resource])
-                    self.featuresArray.append(self.averageYieldCurrentPlayer[plr][resource])
+                    if resource in self.averageYieldOpposingPlayers[plr]:
+                        self.featuresArray.append(self.averageYieldOpposingPlayers[plr][resource])
+                    else:
+                        self.featuresArray.append(0)
 
             
         for coordinate in game.board.intersections:
@@ -118,3 +126,4 @@ class Features():
                     self.featuresArray.append(1)
                 else:
                     self.featuresArray.append(0)
+        return self.featuresArray

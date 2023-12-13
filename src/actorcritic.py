@@ -7,9 +7,9 @@ from features import Features
 import numpy as np
 import numdifftools as nd
 from agent_files import heuristics
-from src.agent_files.agent import HeuristicAgent
+from agent_files import agent
 
-class ActorCritic(HeuristicAgent):
+class ActorCritic(agent.HeuristicAgent):
     gamma = 0.7
     #actions
     #build settlement
@@ -32,7 +32,7 @@ class ActorCritic(HeuristicAgent):
     numActions = 7
     
     def __init__(self, build_settlement_func, place_settlement_func, place_road_func):
-        super().__init__(None,build_settlement_func, place_settlement_func, place_road_func)
+        super().__init__(self.policy,build_settlement_func, place_settlement_func, place_road_func)
         self.fallOff = None
         #theta are the policyweights
         self.firstInitialization = True
@@ -50,12 +50,13 @@ class ActorCritic(HeuristicAgent):
     def initializeEpisode(self, game, player):
         self.player = player
         if self.firstInitialization:
-            currentState = Features(game, self.player).flattenFeature(game, self.player)
+            currentState = Features(game, self.player)
+            currentStateFlat = currentState.flattenFeature(game, self.player)
 
-            thetaSize = (len(currentState) + 1)*self.numActions
+            thetaSize = (len(currentStateFlat) + 1)*self.numActions
 
             self.theta = np.zeros(thetaSize)
-            self.w = np.zeros(len(currentState) + 1)
+            self.w = np.zeros(len(currentStateFlat) + 1)
         self.firstInitialization = False
         self.newEpisode = True
 
