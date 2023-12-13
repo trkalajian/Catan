@@ -183,9 +183,30 @@ class ActorCritic(agent.HeuristicAgent):
             validActions.append(self.PLAY_KNIGHT)
         validActions.append(self.PASS_TURN)
 
-        self.chooseAction(game, validActions)
+        choosenAction = self.chooseAction(game, validActions)
+        if choosenAction == self.BUILD_SETTLEMENT:
+            return [1, 1]
+        if choosenAction == self.BUILD_CITY:
+            return [1, 2]
+        if choosenAction == self.BUILD_ROAD:
+            return [1, 3]
+        if choosenAction == self.BUILD_CARD:
+            return [1 ,4]
+        if choosenAction == self.MAKE_TRADE:
+            return [2, None]
+        if choosenAction == self.PLAY_KNIGHT:
+            return [3, None]
+        if choosenAction == self.PASS_TURN:
+            return [4, None]
+            
         
-
+        #build settlement: [1,1]
+#build city: [1, 2]
+#build road: [1, 3]
+#build dev_card: [1,4]
+#play knight: [3, None]
+#trade resource: [2, None]
+#pass: [4, None]
 
     #         BUILD_SETTLEMENT = 0
     # BUILD_CITY = 1
