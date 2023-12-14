@@ -8,19 +8,12 @@ import actorcritic
 import random
 import sys
 
-numAgents = 2
+from src.actorcritic import ActorCritic
+
+numAgents = 3
 agents = []
 
-for i in range(numAgents):
-    # change some of these to actor-critics when appropriate
 
-    # agent = heuristic_agent_maker()
-    # agents.append(agent)
-    agents.append(actorcritic.ActorCritic(place_settlement_func=place_settlement,
-                                          place_road_func=choose_road_placement,
-                                          place_robber_func = place_robber,
-                                          choose_best_trade=choose_best_trade,
-                                          place_city_func=place_city))
 
 # Function to create a new board and game
 def create_new_game():
@@ -42,7 +35,19 @@ def heuristic_agent_maker():
         choose_best_trade=choose_best_trade,
         place_city_func=place_city
     )
+for i in range(numAgents):
+    # change some of these to actor-critics when appropriate
 
+    if i > 1: 
+        agent = heuristic_agent_maker()
+
+        agents.append(agent)
+    else:
+        agents.append(actorcritic.ActorCritic(place_settlement_func=place_settlement,
+                                                place_road_func=choose_road_placement,
+                                                place_robber_func = place_robber,
+                                                choose_best_trade=choose_best_trade,
+                                                place_city_func=place_city))
 
 # Main game loop
 current_player_num = 0
@@ -62,6 +67,8 @@ while num_turns < max_turns:
     for i in player_order + list(reversed(player_order)):
         is_start = True
         current_player = game.players[i]
+        if isinstance(agents[i], ActorCritic):
+            agents[i].initializeEpisode(game, current_player)
         # coords = choose_intersection(game.board.get_valid_settlement_coords(current_player, ensure_connected=False),
         #                              "Where do you want to build your settlement? ")
         agent_coords = agents[i].place_settlement(game, i, is_start)
@@ -162,6 +169,9 @@ while num_turns < max_turns:
                 #             player.remove_resources({resource: amount})
                 #             current_player.add_resources({resource: amount})
         if game.get_victory_points(current_player) >= 10:
+            if isinstance(current_player, ActorCritic):
+                #This needs to pass in a reward, put in 100 for now
+                agents[current_player_num].terminateEpisode(100)
             print("Current Victory point standings:")
             for i in range(len(game.players)):
                 print("Player %d: %d VP" % (i + 1, game.get_victory_points(game.players[i])))
