@@ -15,8 +15,8 @@ import matplotlib.pyplot as plt
 
 # set number of players here
 numAgents = 2
-num_iterations = 1
-num_episodes = 1
+num_iterations = 10
+num_episodes = 10
 all_rewards = np.zeros((num_iterations, num_episodes, numAgents))
 final_vps = np.zeros((num_iterations, num_episodes, numAgents))
 agents = []

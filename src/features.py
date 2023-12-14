@@ -77,11 +77,11 @@ class Features():
                             self.averageYieldOpposingPlayers[playerYield][resource] = currentYields[playerYield].total_yield[resource]*rollProbability    
             
             
-        for coord in game.board.intersections:
-            coordResources = game.board.get_hex_resources_for_intersection(coord)
+        # for coord in game.board.intersections:
+        #     coordResources = game.board.get_hex_resources_for_intersection(coord)
 
             #hexTokens = game.board.get_hexes_connected_to_intersection(coord)
-            self.resourceLocations[coord] = (coordResources)
+            #self.resourceLocations[coord] = (coordResources)
     
 
     def flattenFeature(self, game:Game, player:Player):
@@ -108,22 +108,22 @@ class Features():
                         self.featuresArray.append(0)
 
             
-        for coordinate in game.board.intersections:
-            if coordinate in self.currentPlayerSettlementSpots:
-                self.featuresArray.append(1)
-            else:
-                self.featuresArray.append(0)
-            for plr in game.players:
-                if plr != player:
-                    if coordinate in self.opponentPlayerSettlementSpots[plr]:
-                        self.featuresArray.append(1)
-                    else:
-                        self.featuresArray.append(0)
+        # for coordinate in game.board.intersections:
+        #     if coordinate in self.currentPlayerSettlementSpots:
+        #         self.featuresArray.append(1)
+        #     else:
+        #         self.featuresArray.append(0)
+        #     for plr in game.players:
+        #         if plr != player:
+        #             if coordinate in self.opponentPlayerSettlementSpots[plr]:
+        #                 self.featuresArray.append(1)
+        #             else:
+        #                 self.featuresArray.append(0)
         
-        for coordinate in game.board.intersections:
-            for resource in Resource:
-                if resource in self.resourceLocations[coordinate]:
-                    self.featuresArray.append(1)
-                else:
-                    self.featuresArray.append(0)
+        # for coordinate in game.board.intersections:
+        #     for resource in Resource:
+        #         if resource in self.resourceLocations[coordinate]:
+        #             self.featuresArray.append(1)
+        #         else:
+        #             self.featuresArray.append(0)
         return self.featuresArray

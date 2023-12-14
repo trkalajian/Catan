@@ -11,7 +11,7 @@ from agent_files import heuristics
 from agent_files import agent
 
 class ActorCritic(agent.HeuristicAgent):
-    gamma = 0.9
+    gamma = 0.5
     #actions
     #build settlement
     #build road
@@ -200,14 +200,14 @@ class ActorCritic(agent.HeuristicAgent):
         return probabilityForAction[actionIndex]/probSum
     
     def policy(self, game, current_player_num=None):
-        newScore = game.get_victory_points(self.player)
+        newScore = game.get_victory_points(self.player) - 2
        # newScore = game.get_victory_points(self.player) + (sum(self.player.resources.values()) * -.1)
         reward = newScore - self.oldScore
-        #print("reward :" + str(reward))
-        # if self.previousAction != 6  and len(self.previousAllowedActions) > 1:
-        #     reward += 2
-        # if self.previousAction == 6  and len(self.previousAllowedActions) > 1:
-        #     reward -= 2
+        print("reward :" + str(reward))
+        if self.previousAction != 6:
+             reward += 1
+        if self.previousAction == 6  and len(self.previousAllowedActions) > 1:
+             reward -= 1
         self.oldScore = newScore
         validActions = []
         if self.player.has_resources(BuildingType.SETTLEMENT.get_required_resources()) and game.board.get_valid_settlement_coords(self.player):
@@ -224,10 +224,10 @@ class ActorCritic(agent.HeuristicAgent):
                              amount > 0]:
             validActions.append(self.PLAY_KNIGHT)
         validActions.append(self.PASS_TURN)
-        #print("these are valid actions: " + str(validActions))
+        print("these are valid actions: " + str(validActions))
         choosenAction = self.chooseAction(game, validActions, reward)
      
-        #print("AC chooses: " + str(choosenAction))
+        print("AC chooses: " + str(choosenAction))
         if choosenAction == self.BUILD_SETTLEMENT:
             return [1, 1]
         if choosenAction == self.BUILD_CITY:
