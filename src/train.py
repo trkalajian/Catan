@@ -17,10 +17,11 @@ import matplotlib.pyplot as plt
 numAgents = 2
 num_iterations = 1
 num_episodes = 1
-all_rewards = np.zeros((num_iterations, num_episodes,  numAgents))
+all_rewards = np.zeros((num_iterations, num_episodes, numAgents))
 final_vps = np.zeros((num_iterations, num_episodes, numAgents))
 agents = []
 winsPerPlayer = np.zeros(numAgents)
+
 
 # Function to create a new board and game
 def create_new_game():
@@ -31,6 +32,7 @@ def create_new_game():
     renderer = BoardRenderer(game.board, {})
     return game, renderer
 
+
 # function to calculate the reward from the most recent distribution of resources
 def resource_reward(game, previous_total_resources):
     card_diff = np.zeros(numAgents)
@@ -38,6 +40,7 @@ def resource_reward(game, previous_total_resources):
         cur_player = game.players[i]
         card_diff[i] = sum(cur_player.resources.values()) - previous_total_resources[i]
     return card_diff * 0.1
+
 
 # function calculates the final victory point rewards at the end of a game (episode)
 def final_vp_reward(game):
@@ -47,6 +50,7 @@ def final_vp_reward(game):
     for index in winner_indices:
         vp_rewards[index] += 100
     return vp_rewards
+
 
 def heuristic_agent_maker():
     heur_policy = heuristic_policy
@@ -98,7 +102,8 @@ for iteration in range(num_iterations):
             # coords = choose_intersection(game.board.get_valid_settlement_coords(current_player, ensure_connected=False),
             #                              "Where do you want to build your settlement? ")
             agent_coords = agents[i].place_settlement(game, i, is_start)
-            game.build_settlement(player=current_player, coords=agent_coords, cost_resources=False, ensure_connected=False)
+            game.build_settlement(player=current_player, coords=agent_coords, cost_resources=False,
+                                  ensure_connected=False)
             current_player.add_resources(game.board.get_hex_resources_for_intersection(agent_coords))
             # road_options = game.board.get_valid_road_coords(current_player, connected_intersection=agent_coords)
             road_coords = agents[i].place_road(game, i)
@@ -113,16 +118,20 @@ for iteration in range(num_iterations):
             dice = random.randint(1, 6) + random.randint(1, 6)
             if dice == 7:
                 card_totals = count_cards(game)
-                resource_check(card_totals, game)
+                sev_reward = resource_check(card_totals,
+                                            game)  # discards people over 7 and returns neg reward porportional to discard
+                for i in range(numAgents):
+                    total_reward[i] += sev_reward[i]
                 hex_coords, player_stolen = agents[current_player_num].place_robber(game, current_player_num)
                 move_robber(current_player, game, hex_coords, player_stolen)
                 pass
-            else:   #  give our resources and rewards
+            else:  # give our resources and rewards
                 previous_total_resources = np.zeros(numAgents)
                 for i in range(numAgents):
                     cur_player = game.players[i]
                     previous_total_resources[i] = sum(
                         cur_player.resources.values())  # Store the player's previous resources
+
                 game.add_yield_for_roll(dice)  # add the yield for the dice roll
 
                 resource_rewards = resource_reward(game, previous_total_resources)  # calculate each players reward
@@ -133,7 +142,7 @@ for iteration in range(num_iterations):
                 while True:
                     try:
                         choice = agents[current_player_num].policy(game, current_player_num)
-                        #print(choice)
+                        print(choice)
                         if 1 <= choice[0] <= 4:
                             break  # Valid choice, exit the loop
                     except ValueError:
@@ -149,7 +158,6 @@ for iteration in range(num_iterations):
                         if not valid_coords:
                             continue
                         print("Player %d is building a settlement" % (current_player_num + 1))
-
                         coords = agents[current_player_num].place_settlement(game, current_player_num, is_start)
                         game.build_settlement(current_player, coords)
                     elif building_choice == 2:
@@ -157,9 +165,8 @@ for iteration in range(num_iterations):
                             continue
                         valid_coords = game.board.get_valid_city_coords(current_player)
                         # coords = choose_intersection(valid_coords, "Where do you want to build a city?  ", game, renderer)
-                        print("Player %d is building a city" % (current_player_num + 1))
-
                         coords = agents[current_player_num].place_city_func(game, valid_coords)
+                        print("Player %d is building a city" % (current_player_num + 1))
                         game.upgrade_settlement_to_city(current_player, coords)
                     elif building_choice == 3:
                         if not current_player.has_resources(BuildingType.ROAD.get_required_resources()):
@@ -167,9 +174,8 @@ for iteration in range(num_iterations):
                         valid_coords = game.board.get_valid_road_coords(current_player)
                         if not valid_coords:
                             continue
-                        print("Player %d is building a road" % (current_player_num + 1))
-
                         path_coords = agents[current_player_num].place_road(game, current_player_num)
+                        print("Player %d is building a road" % (current_player_num + 1))
                         game.build_road(current_player, path_coords)
                     elif building_choice == 4:
                         if not current_player.has_resources(DevelopmentCard.get_required_resources()):
@@ -184,7 +190,6 @@ for iteration in range(num_iterations):
                     # trade_choice = int(input('->  '))
                     trade = agents[current_player_num].choose_trade_func(game, current_player_num, possible_trades)
                     print("Player %d is trading" % (current_player_num + 1))
-
                     if trade == None:
                         print('woa')
                     current_player.add_resources(trade)
@@ -273,7 +278,6 @@ for iteration in range(num_iterations):
         #     for i in range(len(agents)):
         #         agents[i].terminateEpisode(game.get_victory_points(game.players[i]))
 
-
 # the final policy is stored here
 actorCriticTrainedPolicy = []
 for i in range(numAgents):
@@ -282,7 +286,7 @@ for i in range(numAgents):
 file = open("thetaResult.txt", "w")
 for i in actorCriticTrainedPolicy:
     print(str(actorCriticTrainedPolicy[i]))
-    file.write("%d \n" %actorCriticTrainedPolicy[i])
+    file.write("%d \n" % actorCriticTrainedPolicy[i])
 file.close()
 print(num_games)
 
@@ -298,7 +302,8 @@ episodes = np.arange(1, num_episodes + 1)
 
 # Plot for average rewards
 for agent in range(numAgents):
-    plt.errorbar(episodes, avg_rewards_agents[:, agent], yerr=std_rewards_agents[:, agent], fmt='-o', label=f'Agent {agent+1}')
+    plt.errorbar(episodes, avg_rewards_agents[:, agent], yerr=std_rewards_agents[:, agent], fmt='-o',
+                 label=f'Agent {agent + 1}')
 plt.xlabel('Episode')
 plt.ylabel('Average Reward')
 plt.title('Average Reward per Episode with Standard Deviation')
@@ -307,7 +312,8 @@ plt.show()
 
 # Plot for average final victory points
 for agent in range(numAgents):
-    plt.errorbar(episodes, avg_vps_agents[:, agent], yerr=std_vps_agents[:, agent], fmt='-o', label=f'Agent {agent+1}')
+    plt.errorbar(episodes, avg_vps_agents[:, agent], yerr=std_vps_agents[:, agent], fmt='-o',
+                 label=f'Agent {agent + 1}')
 plt.xlabel('Episode')
 plt.ylabel('Average Final Victory Points')
 plt.title('Average Final Victory Points per Episode with Standard Deviation')
