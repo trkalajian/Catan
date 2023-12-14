@@ -210,7 +210,7 @@ while num_games < max_games:
                 print("    %s: %d" % (dev_card, amount))
             print("Congratulations! Player %d wins!" % (current_player_num + 1))
             for i in range(len(game.players)):
-                print("Player %d has won %d times " % ((game.players[i] + 1), winsPerPlayer[game.players[i]]))
+                print("Player %d has won %d times " % ((i +1), winsPerPlayer[i]))
             print("Final board:")
             print(game.board)
             print("Number of Turns: " + str(num_turns))
