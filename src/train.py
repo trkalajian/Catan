@@ -15,8 +15,8 @@ import matplotlib.pyplot as plt
 
 # set number of players here
 numAgents = 2
-num_iterations = 2
-num_episodes = 10
+num_iterations = 1
+num_episodes = 1
 all_rewards = np.zeros((num_iterations, num_episodes,  numAgents))
 final_vps = np.zeros((num_iterations, num_episodes, numAgents))
 agents = []
@@ -81,7 +81,7 @@ num_games = 0
 
 for iteration in range(num_iterations):
     for ep in range(num_episodes):
-        print("Game Number: " + str(num_games))
+        print("Game Number: " + str(num_games + 1))
         total_reward = np.zeros(numAgents)  # Initialize total reward for this episode
         # Create a new board and game for each iteration to reset the board
         game, renderer = create_new_game()
@@ -133,7 +133,7 @@ for iteration in range(num_iterations):
                 while True:
                     try:
                         choice = agents[current_player_num].policy(game, current_player_num)
-                        print(choice)
+                        #print(choice)
                         if 1 <= choice[0] <= 4:
                             break  # Valid choice, exit the loop
                     except ValueError:
@@ -148,6 +148,8 @@ for iteration in range(num_iterations):
                         valid_coords = game.board.get_valid_settlement_coords(current_player)
                         if not valid_coords:
                             continue
+                        print("Player %d is building a settlement" % (current_player_num + 1))
+
                         coords = agents[current_player_num].place_settlement(game, current_player_num, is_start)
                         game.build_settlement(current_player, coords)
                     elif building_choice == 2:
@@ -155,6 +157,8 @@ for iteration in range(num_iterations):
                             continue
                         valid_coords = game.board.get_valid_city_coords(current_player)
                         # coords = choose_intersection(valid_coords, "Where do you want to build a city?  ", game, renderer)
+                        print("Player %d is building a city" % (current_player_num + 1))
+
                         coords = agents[current_player_num].place_city_func(game, valid_coords)
                         game.upgrade_settlement_to_city(current_player, coords)
                     elif building_choice == 3:
@@ -163,11 +167,14 @@ for iteration in range(num_iterations):
                         valid_coords = game.board.get_valid_road_coords(current_player)
                         if not valid_coords:
                             continue
+                        print("Player %d is building a road" % (current_player_num + 1))
+
                         path_coords = agents[current_player_num].place_road(game, current_player_num)
                         game.build_road(current_player, path_coords)
                     elif building_choice == 4:
                         if not current_player.has_resources(DevelopmentCard.get_required_resources()):
                             continue
+                        print("Player %d is buying a card" % (current_player_num + 1))
                         dev_card = game.build_development_card(current_player)
                     elif building_choice == 5:
                         break
@@ -176,6 +183,8 @@ for iteration in range(num_iterations):
                     possible_trades = list(current_player.get_possible_trades())
                     # trade_choice = int(input('->  '))
                     trade = agents[current_player_num].choose_trade_func(game, current_player_num, possible_trades)
+                    print("Player %d is trading" % (current_player_num + 1))
+
                     if trade == None:
                         print('woa')
                     current_player.add_resources(trade)
@@ -183,6 +192,7 @@ for iteration in range(num_iterations):
                     dev_cards = [card for card, amount in current_player.development_cards.items() if
                                  amount > 0 and card is not DevelopmentCard.VICTORY_POINT]
                     card_to_play = DevelopmentCard.KNIGHT
+                    print("Player %d is playing a knight" % (current_player_num + 1))
                     game.play_development_card(current_player, card_to_play)
                     if card_to_play is DevelopmentCard.KNIGHT:
                         hex_coords, player_stolen = agents[current_player_num].place_robber(game, current_player_num)
@@ -248,6 +258,7 @@ for iteration in range(num_iterations):
                     final_vps[iteration][ep][i] = game.get_victory_points(game.players[i])
                 for i in range(len(agents)):
                     if isinstance(agents[i], ActorCritic):
+                        print("Reward: " + str(all_rewards[iteration][ep][i]))
                         agents[i].terminateEpisode(all_rewards[iteration][ep][i])
                 break
 
@@ -271,7 +282,7 @@ for i in range(numAgents):
 file = open("thetaResult.txt", "w")
 for i in actorCriticTrainedPolicy:
     print(str(actorCriticTrainedPolicy[i]))
-    file.write(str(actorCriticTrainedPolicy[i]))
+    file.write("%d \n" %actorCriticTrainedPolicy[i])
 file.close()
 print(num_games)
 
