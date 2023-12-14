@@ -8,7 +8,7 @@ import actorcritic
 import random
 import sys
 
-from src.actorcritic import ActorCritic
+from actorcritic import ActorCritic
 
 numAgents = 3
 agents = []
@@ -169,9 +169,17 @@ while num_turns < max_turns:
                 #             player.remove_resources({resource: amount})
                 #             current_player.add_resources({resource: amount})
         if game.get_victory_points(current_player) >= 10:
-            if isinstance(current_player, ActorCritic):
-                #This needs to pass in a reward, put in 100 for now
+            if isinstance(agents[current_player_num], ActorCritic):
+                #This needs to pass in a reward that includes winning the game, put in 100 for now
                 agents[current_player_num].terminateEpisode(100)
+            for agent in agents:
+                if agent != agents[current_player_num] and isinstance(agent, ActorCritic):
+                    #This needs to pass an actual reward for actions taken, but didn't win the game
+                    agent.terminateEpisode(0)
+                    
+
+                
+                
             print("Current Victory point standings:")
             for i in range(len(game.players)):
                 print("Player %d: %d VP" % (i + 1, game.get_victory_points(game.players[i])))
