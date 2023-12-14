@@ -34,11 +34,13 @@ class EpsilonGreedyPolicy:
 
 # class to initialize the heuristic agent
 class HeuristicAgent:
-    def __init__(self, policy, build_settlement_func, place_settlement_func, place_road_func) :
+    def __init__(self, policy, place_settlement_func, place_road_func, place_robber_func, choose_best_trade, place_city_func) :
         self.policy = policy
-        self.build_settlement_func = build_settlement_func
         self.place_settlement_func = place_settlement_func
         self.place_road = place_road_func
+        self.place_robber = place_robber_func
+        self.choose_trade_func = choose_best_trade
+        self.place_city_func = place_city_func
 
     def choose_action(self, game, current_player_num, is_start):
         # Implement your heuristic policy logic here

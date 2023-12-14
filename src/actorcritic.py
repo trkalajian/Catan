@@ -82,6 +82,7 @@ class ActorCritic(agent.HeuristicAgent):
         #extracts a subsection of theta that is relevant to the current action
         sliceThetaSize = len(theta)/self.numActions
         assert int(sliceThetaSize) == sliceThetaSize
+        sliceThetaSize = int(sliceThetaSize)
         actionTheta = theta[currentAction*sliceThetaSize:currentAction*sliceThetaSize+sliceThetaSize]
         return actionTheta
     
@@ -139,12 +140,16 @@ class ActorCritic(agent.HeuristicAgent):
         probabilityForActionSum = []
         #find the action to take based on probability
         for i in range(len(allowedActions)):
-            probabilityForAction.append(math.e**self.h(currentState, allowedActions[i], theta))
+            probabilityForAction.append(math.exp(self.h(currentState, allowedActions[i], theta)))
         probSum = np.sum(probabilityForAction)
         for prob in probabilityForAction:
-            probabilityForActionSum.append(probabilityForAction[prob]/probSum)
-        selection = math.random()
-        for i in probabilityForActionSum[i]:
+            probabilityForActionSum.append(prob/probSum)
+        selection = random.random()
+        if sum(probabilityForActionSum) != 1:
+            print(sum(probabilityForActionSum))
+        assert sum(probabilityForActionSum) == 1
+        
+        for i in range(len(probabilityForActionSum)):
             if selection <= probabilityForActionSum[i]:
                 return allowedActions[i]
             else:
@@ -162,7 +167,7 @@ class ActorCritic(agent.HeuristicAgent):
         for i in range(len(allowedActions)):
             if allowedActions[i] == actionForProb:
                 actionIndex = i
-            probabilityForAction.append(math.e**self.h(currentState, allowedActions[i], theta))
+            probabilityForAction.append(math.exp(self.h(currentState, allowedActions[i], theta)))
         probSum = np.sum(probabilityForAction)
         return probabilityForAction[actionIndex]/probSum
     
@@ -174,7 +179,7 @@ class ActorCritic(agent.HeuristicAgent):
             validActions.append(self.BUILD_CITY)
         if self.player.has_resources(BuildingType.ROAD.get_required_resources()) and game.board.get_valid_road_coords(self.player):
             validActions.append(self.BUILD_ROAD)
-        if self.player.has_resources(DevelopmentCard.get_required_resources()):
+        if self.player.has_resources(DevelopmentCard.get_required_resources()) and game.development_card_deck:
             validActions.append(self.BUILD_CARD)
         if self.player.get_possible_trades():
             validActions.append(self.MAKE_TRADE)

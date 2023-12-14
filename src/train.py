@@ -44,10 +44,11 @@ for i in range(numAgents):
         agents.append(agent)
     else:
         agents.append(actorcritic.ActorCritic(place_settlement_func=place_settlement,
-                                                place_road_func=choose_road_placement,
-                                                place_robber_func = place_robber,
-                                                choose_best_trade=choose_best_trade,
-                                                place_city_func=place_city))
+                                                 place_road_func=choose_road_placement,
+                                                 place_robber_func = place_robber,
+                                                 choose_best_trade=choose_best_trade,
+                                                 place_city_func=place_city))
+
 
 # Main game loop
 current_player_num = 0

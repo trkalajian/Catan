@@ -201,7 +201,7 @@ class Game:
             raise NotEnoughResourcesError(
                 "Player does not have enough resources to build a development card"
             )
-
+        
         card = self.development_card_deck.pop(0)
         player.development_cards[card] += 1
         player.remove_resources(DevelopmentCard.get_required_resources())
