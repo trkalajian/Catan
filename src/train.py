@@ -11,7 +11,7 @@ import numpy as np
 from actorcritic import ActorCritic
 
 #set number of players here
-numAgents = 3
+numAgents = 2
 agents = []
 winsPerPlayer = np.zeros(numAgents)
 #reward function for things other than winning
@@ -41,7 +41,7 @@ def heuristic_agent_maker():
 for i in range(numAgents):
     # change some of these to actor-critics when appropriate
 
-    if i > 1: 
+    if i >= 1: 
         agent = heuristic_agent_maker()
 
         agents.append(agent)
