@@ -111,6 +111,7 @@ while num_games < max_games:
                 try:
                     choice = agents[current_player_num].policy(game, current_player_num)
                     if 1 <= choice[0] <= 4:
+                        
                         break  # Valid choice, exit the loop
                 except ValueError:
                     print("Invalid input. Please enter a number.")
@@ -125,6 +126,7 @@ while num_games < max_games:
                     if not valid_coords:
                         continue
                     coords = agents[current_player_num].place_settlement(game, current_player_num, is_start)
+                    print("Player %d is building a settlement" % (current_player_num + 1))
                     game.build_settlement(current_player, coords)
                 elif building_choice == 2:
                     if not current_player.has_resources(BuildingType.CITY.get_required_resources()):
@@ -132,6 +134,7 @@ while num_games < max_games:
                     valid_coords = game.board.get_valid_city_coords(current_player)
                     # coords = choose_intersection(valid_coords, "Where do you want to build a city?  ", game, renderer)
                     coords = agents[current_player_num].place_city_func(game, valid_coords)
+                    print("Player %d is building a city" % (current_player_num + 1))
                     game.upgrade_settlement_to_city(current_player, coords)
                 elif building_choice == 3:
                     if not current_player.has_resources(BuildingType.ROAD.get_required_resources()):
@@ -140,10 +143,12 @@ while num_games < max_games:
                     if not valid_coords:
                         continue
                     path_coords = agents[current_player_num].place_road(game, current_player_num)
+                    print("Player %d is building a road" % (current_player_num + 1))
                     game.build_road(current_player, path_coords)
                 elif building_choice == 4:
                     if not current_player.has_resources(DevelopmentCard.get_required_resources()):
                         continue
+                    print("Player %d is buying a card" % (current_player_num + 1))
                     dev_card = game.build_development_card(current_player)
                 elif building_choice == 5:
                     break
@@ -154,6 +159,7 @@ while num_games < max_games:
                 trade = agents[current_player_num].choose_trade_func(game, current_player_num, possible_trades)
                 if trade == None:
                     print('woa')
+                print("Player %d is trading" % (current_player_num + 1))
                 current_player.add_resources(trade)
             elif choice[0] == 3:
                 dev_cards = [card for card, amount in current_player.development_cards.items() if
@@ -161,6 +167,7 @@ while num_games < max_games:
                 card_to_play = DevelopmentCard.KNIGHT
                 game.play_development_card(current_player, card_to_play)
                 if card_to_play is DevelopmentCard.KNIGHT:
+                    print("Player %d is playing a knight" % (current_player_num + 1))
                     hex_coords, player_stolen = agents[current_player_num].place_robber(game, current_player_num)
                     move_robber(current_player, game, hex_coords, player_stolen)
                 # elif card_to_play is DevelopmentCard.YEAR_OF_PLENTY:
