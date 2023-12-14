@@ -38,7 +38,7 @@ class ActorCritic(agent.HeuristicAgent):
         self.firstInitialization = True
         self.alphaTheta = .1
         self.alphaW = .1
-        
+        self.oldScore = 0
         #w is the action weights
         self.newEpisode = True
         self.previousState = None
@@ -76,6 +76,7 @@ class ActorCritic(agent.HeuristicAgent):
         self.w =  np.add(self.w, np.multiply(valueGradient, self.alphaW*delta))
         self.theta = np.add(self.theta, np.multiply(thetaGradient, self.alphaTheta*self.fallOff))
         self.fallOff = self.fallOff*self.gamma
+        print(self.theta)
         return
     
     def extractActionWeightFromTheta(self, currentAction, theta):
@@ -140,23 +141,26 @@ class ActorCritic(agent.HeuristicAgent):
         probabilityForActionSum = []
         #find the action to take based on probability
         for i in range(len(allowedActions)):
-            probabilityForAction.append(math.exp(self.h(currentState, allowedActions[i], theta)))
+            try:
+                probabilityForAction.append(np.exp(self.h(currentState, allowedActions[i], theta)))
+            except:
+                print(theta)
+                raise Exception("Overflow")
+
         probSum = np.sum(probabilityForAction)
         for prob in probabilityForAction:
             probabilityForActionSum.append(prob/probSum)
         selection = random.random()
-        if sum(probabilityForActionSum) != 1:
-            print(sum(probabilityForActionSum))
-        assert sum(probabilityForActionSum) == 1
+
         
-        for i in range(len(probabilityForActionSum)):
+        for i in range(len(probabilityForActionSum) - 1):
             if selection <= probabilityForActionSum[i]:
                 return allowedActions[i]
             else:
                 selection -= probabilityForActionSum[i]
         #we should not get here
-        assert False
-        return None
+         
+        return allowedActions[len(probabilityForActionSum)-1]
     
 
     def actionProbabilityPolicyAC(self, actionForProb, allowedActions, currentState, theta):
@@ -164,14 +168,24 @@ class ActorCritic(agent.HeuristicAgent):
         probabilityForAction = []
         probabilityForActionSum = []
         actionIndex = None
+        #print(theta)
+
         for i in range(len(allowedActions)):
             if allowedActions[i] == actionForProb:
                 actionIndex = i
-            probabilityForAction.append(math.exp(self.h(currentState, allowedActions[i], theta)))
+            try:
+                probabilityForAction.append(np.exp(self.h(currentState, allowedActions[i], theta)))
+            except:
+                print(theta)
+                raise Exception("Overflow")
         probSum = np.sum(probabilityForAction)
         return probabilityForAction[actionIndex]/probSum
     
     def policy(self, game):
+        
+        newScore = game.get_victory_points(self.player) + (sum(self.player.resources.values()) * .1)
+        reward = newScore - self.oldScore
+        self.oldScore = newScore
         validActions = []
         if self.player.has_resources(BuildingType.SETTLEMENT.get_required_resources()) and game.board.get_valid_settlement_coords(self.player):
             validActions.append(self.BUILD_SETTLEMENT)
@@ -188,7 +202,7 @@ class ActorCritic(agent.HeuristicAgent):
             validActions.append(self.PLAY_KNIGHT)
         validActions.append(self.PASS_TURN)
 
-        choosenAction = self.chooseAction(game, validActions)
+        choosenAction = self.chooseAction(game, validActions, reward)
         if choosenAction == self.BUILD_SETTLEMENT:
             return [1, 1]
         if choosenAction == self.BUILD_CITY:

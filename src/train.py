@@ -13,7 +13,9 @@ from actorcritic import ActorCritic
 numAgents = 3
 agents = []
 
+#reward function for things other than winning
 
+    
 
 # Function to create a new board and game
 def create_new_game():
@@ -56,8 +58,12 @@ is_start = False
 num_turns = 0
 num_games = 0
 max_turns = 1000  # Number of turns to play
+max_games = 1000
 
-while num_turns < max_turns:
+
+while num_games < max_games:
+    print("Game Number: " + str(num_games))
+
     # Create a new board and game for each iteration to reset the board
     game, renderer = create_new_game()
     # Creating players and setting the order
@@ -81,8 +87,11 @@ while num_turns < max_turns:
 
     print(game.board)
     current_player_num = 0
+    num_turns = 0
+
     is_start = False
-    while True:
+    
+    while num_turns < max_turns:
         current_player = game.players[current_player_num]
         # Roll the dice
         dice = random.randint(1, 6) + random.randint(1, 6)
@@ -173,10 +182,10 @@ while num_turns < max_turns:
             if isinstance(agents[current_player_num], ActorCritic):
                 #This needs to pass in a reward that includes winning the game, put in 100 for now
                 agents[current_player_num].terminateEpisode(100)
-            for agent in agents:
-                if agent != agents[current_player_num] and isinstance(agent, ActorCritic):
+            for i in range(len(agents)):
+                if i != current_player_num and isinstance(agents[i], ActorCritic):
                     #This needs to pass an actual reward for actions taken, but didn't win the game
-                    agent.terminateEpisode(0)
+                    agents[i].terminateEpisode(game.get_victory_points(game.players[i]))
                     
 
                 
@@ -199,11 +208,19 @@ while num_turns < max_turns:
             print("Congratulations! Player %d wins!" % (current_player_num + 1))
             print("Final board:")
             print(game.board)
+            print("Number of Turns: " + str(num_turns))
             num_games += 1
             break
 
         current_player_num = (current_player_num + 1) % len(game.players)
-        print(num_turns)
         num_turns += 1
+    if num_turns == max_turns:
+        print("Number of Turns: " + str(num_turns))
+
+        num_games += 1
+        for i in range(len(agents)):
+            agents[i].terminateEpisode(game.get_victory_points(game.players[i]))
+
+        
 
 print(num_games)
