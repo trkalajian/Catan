@@ -96,7 +96,7 @@ class ActorCritic(agent.HeuristicAgent):
             self.previousState = currentState
             self.previousAction = action
             self.previousAllowedActions = allowedActions.copy()
-            print("new episode")
+            #print("new episode")
             return action
         else:
             delta = reward + self.gamma* self.valueFunction(currentState, self.w) - self.valueFunction(self.previousState, self.w)
@@ -224,10 +224,10 @@ class ActorCritic(agent.HeuristicAgent):
                              amount > 0]:
             validActions.append(self.PLAY_KNIGHT)
         validActions.append(self.PASS_TURN)
-        print("these are valid actions: " + str(validActions))
+        #print("these are valid actions: " + str(validActions))
         choosenAction = self.chooseAction(game, validActions, reward)
      
-        print("AC chooses: " + str(choosenAction))
+        #print("AC chooses: " + str(choosenAction))
         if choosenAction == self.BUILD_SETTLEMENT:
             return [1, 1]
         if choosenAction == self.BUILD_CITY:
