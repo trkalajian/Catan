@@ -197,7 +197,7 @@ class ActorCritic(agent.HeuristicAgent):
         probSum = np.sum(probabilityForAction)
         return probabilityForAction[actionIndex]/probSum
     
-    def policy(self, game):
+    def policy(self, game, current_player_num=None):
         
         newScore = game.get_victory_points(self.player) + (sum(self.player.resources.values()) * .1)
         reward = newScore - self.oldScore

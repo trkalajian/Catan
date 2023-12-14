@@ -11,7 +11,7 @@ import numpy as np
 from actorcritic import ActorCritic
 
 #set number of players here
-numAgents = 2
+numAgents = 3
 agents = []
 winsPerPlayer = np.zeros(numAgents)
 #reward function for things other than winning
@@ -46,6 +46,7 @@ for i in range(numAgents):
 
         agents.append(agent)
     else:
+        #creates an actor critic
         agents.append(actorcritic.ActorCritic(place_settlement_func=place_settlement,
                                                  place_road_func=choose_road_placement,
                                                  place_robber_func = place_robber,
@@ -108,7 +109,7 @@ while num_games < max_games:
         while choice[0] != 4:
             while True:
                 try:
-                    choice = agents[current_player_num].policy(game)
+                    choice = agents[current_player_num].policy(game, current_player_num)
                     if 1 <= choice[0] <= 4:
                         break  # Valid choice, exit the loop
                 except ValueError:
@@ -186,7 +187,7 @@ while num_games < max_games:
                 agents[current_player_num].terminateEpisode(100)
             for i in range(len(agents)):
                 if i != current_player_num and isinstance(agents[i], ActorCritic):
-                    #This needs to pass an actual reward for actions taken, but didn't win the game
+                    #rewards players who didnt win based on their VP number
                     agents[i].terminateEpisode(game.get_victory_points(game.players[i]))
                     
 
@@ -223,7 +224,8 @@ while num_games < max_games:
         num_games += 1
         for i in range(len(agents)):
             agents[i].terminateEpisode(game.get_victory_points(game.players[i]))
-
+            
+#the final policy is stored here
 for i in agents[i]:
     if isinstance(agents[i], ActorCritic):
         actorCriticTrainedPolicy = agents[i].theta
