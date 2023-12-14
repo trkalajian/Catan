@@ -1,3 +1,4 @@
+from tkinter import CURRENT
 from pycatan.board import BuildingType
 from pycatan import DevelopmentCard
 from argparse import Action
@@ -76,7 +77,6 @@ class ActorCritic(agent.HeuristicAgent):
         self.w =  np.add(self.w, np.multiply(valueGradient, self.alphaW*delta))
         self.theta = np.add(self.theta, np.multiply(thetaGradient, self.alphaTheta*self.fallOff))
         self.fallOff = self.fallOff*self.gamma
-        print(self.theta)
         return
     
     def extractActionWeightFromTheta(self, currentAction, theta):
@@ -134,6 +134,10 @@ class ActorCritic(agent.HeuristicAgent):
                 weightSum += extractedTheta[i]
             else:
                 weightSum += extractedTheta[i]*state[i]
+        if weightSum > 500:
+            return 500
+        if weightSum < -500:
+            return -500
         return weightSum
     
     def actionSelectionPolicyAC(self, allowedActions, currentState, theta):
@@ -142,9 +146,21 @@ class ActorCritic(agent.HeuristicAgent):
         #find the action to take based on probability
         for i in range(len(allowedActions)):
             try:
-                probabilityForAction.append(np.exp(self.h(currentState, allowedActions[i], theta)))
+                probabilityForAction.append(math.exp(self.h(currentState, allowedActions[i], theta)))
             except:
-                print(theta)
+                print(max(currentState))
+                print(sum(currentState))
+                thetaArray= self.extractActionWeightFromTheta(allowedActions[i], theta)
+                print("currentstate size: " + str(len(currentState)))
+                print("Theta Size: " + str(len(theta)))
+                print(self.h(currentState, allowedActions[i], theta))
+
+                for j in range(len(currentState)):
+                    print(str(j) + " : " + str(thetaArray[j]))
+                    print(str(j) +" : " + str(currentState[j]))
+                print(theta[j+1])
+        
+
                 raise Exception("Overflow")
 
         probSum = np.sum(probabilityForAction)
@@ -174,7 +190,7 @@ class ActorCritic(agent.HeuristicAgent):
             if allowedActions[i] == actionForProb:
                 actionIndex = i
             try:
-                probabilityForAction.append(np.exp(self.h(currentState, allowedActions[i], theta)))
+                probabilityForAction.append(math.exp(self.h(currentState, allowedActions[i], theta)))
             except:
                 print(theta)
                 raise Exception("Overflow")

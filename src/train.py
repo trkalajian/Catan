@@ -7,12 +7,13 @@ from agent_files.heuristics import build_settlement, place_settlement, heuristic
 import actorcritic
 import random
 import sys
-
+import numpy as np
 from actorcritic import ActorCritic
 
-numAgents = 3
+#set number of players here
+numAgents = 2
 agents = []
-
+winsPerPlayer = np.zeros(numAgents)
 #reward function for things other than winning
 
     
@@ -22,7 +23,7 @@ def create_new_game():
     board = BeginnerBoard()
     # BoardRenderer.player_color_map = {}
     # BoardRenderer._unused_player_colors = BoardRenderer.DEFAULT_PLAYER_COLORS
-    game = Game(board, 2)
+    game = Game(board, numAgents)
     renderer = BoardRenderer(game.board,{})
     return game, renderer
 
@@ -179,6 +180,7 @@ while num_games < max_games:
                 #             player.remove_resources({resource: amount})
                 #             current_player.add_resources({resource: amount})
         if game.get_victory_points(current_player) >= 10:
+            winsPerPlayer[current_player_num] += 1
             if isinstance(agents[current_player_num], ActorCritic):
                 #This needs to pass in a reward that includes winning the game, put in 100 for now
                 agents[current_player_num].terminateEpisode(100)
@@ -206,6 +208,7 @@ while num_games < max_games:
             for dev_card, amount in current_player.development_cards.items():
                 print("    %s: %d" % (dev_card, amount))
             print("Congratulations! Player %d wins!" % (current_player_num + 1))
+            print("Player %d has won %d times " % ((current_player_num + 1), winsPerPlayer[current_player_num]))
             print("Final board:")
             print(game.board)
             print("Number of Turns: " + str(num_turns))
@@ -221,6 +224,7 @@ while num_games < max_games:
         for i in range(len(agents)):
             agents[i].terminateEpisode(game.get_victory_points(game.players[i]))
 
-        
-
+for i in agents[i]:
+    if isinstance(agents[i], ActorCritic):
+        actorCriticTrainedPolicy = agents[i].theta
 print(num_games)
