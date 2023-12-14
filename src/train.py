@@ -209,7 +209,8 @@ while num_games < max_games:
             for dev_card, amount in current_player.development_cards.items():
                 print("    %s: %d" % (dev_card, amount))
             print("Congratulations! Player %d wins!" % (current_player_num + 1))
-            print("Player %d has won %d times " % ((current_player_num + 1), winsPerPlayer[current_player_num]))
+            for i in range(len(game.players)):
+                print("Player %d has won %d times " % ((game.players[i] + 1), winsPerPlayer[game.players[i]]))
             print("Final board:")
             print(game.board)
             print("Number of Turns: " + str(num_turns))
@@ -220,13 +221,16 @@ while num_games < max_games:
         num_turns += 1
     if num_turns == max_turns:
         print("Number of Turns: " + str(num_turns))
+        for i in range(len(game.players)):
+            print("Player %d has won %d times " % ((game.players[i] + 1), winsPerPlayer[game.players[i]]))
 
         num_games += 1
         for i in range(len(agents)):
             agents[i].terminateEpisode(game.get_victory_points(game.players[i]))
             
 #the final policy is stored here
+actorCriticTrainedPolicy = []
 for i in agents[i]:
     if isinstance(agents[i], ActorCritic):
-        actorCriticTrainedPolicy = agents[i].theta
+        actorCriticTrainedPolicy.append(agents[i].theta)
 print(num_games)
