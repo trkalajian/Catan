@@ -240,4 +240,9 @@ actorCriticTrainedPolicy = []
 for i in agents[i]:
     if isinstance(agents[i], ActorCritic):
         actorCriticTrainedPolicy.append(agents[i].theta)
+file = open("thetaResult.txt", "w")
+for i in actorCriticTrainedPolicy:
+    print(str(actorCriticTrainedPolicy[i]))
+    file.write(str(actorCriticTrainedPolicy[i]))
+file.close()
 print(num_games)
