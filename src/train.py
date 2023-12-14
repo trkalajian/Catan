@@ -279,12 +279,12 @@ actorCriticTrainedPolicy = []
 for i in range(numAgents):
     if isinstance(agents[i], ActorCritic):
         actorCriticTrainedPolicy.append(agents[i].theta)
-file = open("thetaResult.txt", "w")
-for i in actorCriticTrainedPolicy:
-    print(str(actorCriticTrainedPolicy[i]))
-    file.write("%d \n" %actorCriticTrainedPolicy[i])
-file.close()
-print(num_games)
+# file = open("thetaResult.txt", "w")
+# for i in actorCriticTrainedPolicy:
+#     print(str(actorCriticTrainedPolicy[i]))
+#     file.write("%d \n" %actorCriticTrainedPolicy[i])
+# file.close()
+# print(num_games)
 
 # Calculations for each agent
 avg_rewards_agents = np.mean(all_rewards, axis=0)  # Shape: (num_episodes, numAgents)
