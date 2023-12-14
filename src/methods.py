@@ -1,3 +1,5 @@
+import numpy as np
+
 from pycatan import Game, DevelopmentCard, Resource
 from pycatan.board import BeginnerBoard, BoardRenderer, BuildingType
 import string
@@ -106,6 +108,8 @@ def count_cards(game):
 
 # takes any player over 7 cards and performs the discard action randomly
 def resource_check(card_totals, game):
+    discard_rewards = np.zeros(len(card_totals))  # Initialize rewards array
+
     for i, total in enumerate(card_totals):
         if total > 7:
             player = game.players[i]
@@ -127,5 +131,13 @@ def resource_check(card_totals, game):
                         break
                 player.resources[resource_to_discard] -= 1
 
-            # print(f"Player {i + 1} discarded {cards_to_discard}. Remaining cards: {player.resources}")
+            # Update the rewards array only if cards are discarded
+            if cards_to_discard > 0:
+                discard_rewards[i] = -0.2 * cards_to_discard
+
             print(f"Player {i + 1} discarded {cards_to_discard}")
+        else:
+            # Reward for not discarding any cards
+            discard_rewards[i] = 0
+
+    return discard_rewards
