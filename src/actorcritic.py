@@ -109,7 +109,7 @@ class ActorCritic(agent.HeuristicAgent):
             #print("value prev state " + str(self.valueFunction(self.previousState, self.w)))
                   
             #print("W " + str(self.w))
-            #print("DELTA " + str(delta))
+            print("DELTA " + str(delta))
             diffValue = lambda w : self.valueFunction(self.previousState, w)
             valueGradient = nd.Gradient(diffValue)(self.w)
             #print("VALUE GRAD " + str(valueGradient))
@@ -219,15 +219,16 @@ class ActorCritic(agent.HeuristicAgent):
         probSum = np.sum(probabilityForAction)
         result = probabilityForAction[actionIndex]/probSum
         if result <= 0 or math.isnan(result):
-            print(result)
+            print("allowed actions: " + str(allowedActions))
+            print("action index: " + str(actionIndex))
+            print("Prob sum:" + str(probSum))
+            print("prob result: " + str(result))
             raise Exception("Invalid Prob")
         return result
     
     def policy(self, game, current_player_num=None):
-        newScore = game.get_victory_points(self.player) 
-       # newScore = game.get_victory_points(self.player) + (sum(self.player.resources.values()) * -.1)
-        #reward = newScore - self.oldScore
-        reward = 0
+        newScore = game.get_victory_points(self.player) - 2
+        reward = newScore - self.oldScore
         # if self.previousAction != 6:
         #      reward += 2
         # if self.previousAction == 6  and len(self.previousAllowedActions) > 1:
@@ -249,10 +250,10 @@ class ActorCritic(agent.HeuristicAgent):
                              amount > 0]:
             validActions.append(self.PLAY_KNIGHT)
         validActions.append(self.PASS_TURN)
-        print("these are valid actions: " + str(validActions))
+        #print("these are valid actions: " + str(validActions))
         choosenAction = self.chooseAction(game, validActions, reward)
      
-        print("AC chooses: " + str(choosenAction))
+        #print("AC chooses: " + str(choosenAction))
         if choosenAction == self.BUILD_SETTLEMENT:
             return [1, 1]
         if choosenAction == self.BUILD_CITY:

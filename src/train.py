@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 
 # set number of players here
 numAgents = 2
-num_iterations = 100
+num_iterations = 10
 num_episodes = 100
 all_rewards = np.zeros((num_iterations, num_episodes, numAgents))
 final_vps = np.zeros((num_iterations, num_episodes, numAgents))
@@ -85,7 +85,7 @@ num_games = 0
 
 for iteration in range(num_iterations):
     for ep in range(num_episodes):
-        print("Game Number: " + str(num_games + 1))
+        print("Game Number: " + str(num_games + 1)+ " ******************************************************************")
         total_reward = np.zeros(numAgents)  # Initialize total reward for this episode
         # Create a new board and game for each iteration to reset the board
         game, renderer = create_new_game()
@@ -142,7 +142,7 @@ for iteration in range(num_iterations):
                 while True:
                     try:
                         choice = agents[current_player_num].policy(game, current_player_num)
-                        print(choice)
+                        #print(choice)
                         if 1 <= choice[0] <= 4:
                             break  # Valid choice, exit the loop
                     except ValueError:
@@ -267,9 +267,9 @@ for iteration in range(num_iterations):
                         #agents[i].terminateEpisode(all_rewards[iteration][ep][i])
                         agents[i].terminateEpisode(0)
                     if isinstance(agents[i], ActorCritic) and i == current_player_num:
-                        #print("Reward: " + str(all_rewards[iteration][ep][i]))
-                        #agents[i].terminateEpisode(all_rewards[iteration][ep][i])
-                        agents[i].terminateEpisode(100)
+                        print("Reward: " + str(all_rewards[iteration][ep][i]))
+                        agents[i].terminateEpisode(all_rewards[iteration][ep][i])
+                        #agents[i].terminateEpisode(100)
                 break
 
             current_player_num = (current_player_num + 1) % len(game.players)
