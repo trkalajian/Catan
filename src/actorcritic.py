@@ -219,7 +219,9 @@ class ActorCritic(agent.HeuristicAgent):
         probSum = np.sum(probabilityForAction)
         result = probabilityForAction[actionIndex]/probSum
         if result <= 0 or math.isnan(result):
-            print(result)
+            print("Prob for action result " + str(result))
+            print("Prob sum " + str(probSum))
+
             raise Exception("Invalid Prob")
         return result
     
