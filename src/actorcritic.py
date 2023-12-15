@@ -11,7 +11,7 @@ import numpy as np
 import numdifftools as nd
 from agent_files import heuristics
 from agent_files import agent
-
+#print(math.exp(-350)/math.exp(350))
 class ActorCritic(agent.HeuristicAgent):
     gamma = 0.9
     #actions
@@ -155,10 +155,10 @@ class ActorCritic(agent.HeuristicAgent):
                 weightSum += extractedTheta[i]
             else:
                 weightSum += extractedTheta[i]*state[i]
-        if weightSum > 500:
-            return 500
-        if weightSum < -500:
-            return -500
+        if weightSum > 350:
+            return 350
+        if weightSum < -350:
+            return -350
         return weightSum
     
     def actionSelectionPolicyAC(self, allowedActions, currentState, theta):
@@ -220,7 +220,7 @@ class ActorCritic(agent.HeuristicAgent):
         result = probabilityForAction[actionIndex]/probSum
         if result <= 0 or math.isnan(result):
             print("allowed actions: " + str(allowedActions))
-            print("action index: " + str(actionIndex))
+            print("action index prob: " + str(probabilityForAction[actionIndex]))
             print("Prob sum:" + str(probSum))
             print("prob result: " + str(result))
             raise Exception("Invalid Prob")
