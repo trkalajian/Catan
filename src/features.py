@@ -82,30 +82,44 @@ class Features():
 
             #hexTokens = game.board.get_hexes_connected_to_intersection(coord)
             #self.resourceLocations[coord] = (coordResources)
-    
 
     def flattenFeature(self, game:Game, player:Player):
+        self.featureNames= []
         self.featuresArray = []
         #function to flatten features so that they are in a consistent order and consumable by an agent
         #feature order player VP, op VP, player resources, player yield, op resources, op yield, 
         self.featuresArray.append(self.currentPlayerVictoryPoints)
+        self.featureNames.append("VP SELF")
         for plr in game.players:
                 if plr != player:
                     self.featuresArray.append(self.opponentVictoryPoints[plr])
+                    self.featureNames.append("VP FOR PLAYER " + str(plr))
+
 
         for resource in Resource:
+            self.featureNames.append("RESOURCE SELF")
+
             self.featuresArray.append(self.currentPlayerResources[resource])
             if resource in self.averageYieldCurrentPlayer:
                 self.featuresArray.append(self.averageYieldCurrentPlayer[resource])
+                self.featureNames.append("YIELD SELF FOR RESOURCE " + str(resource))
             else:
+                self.featureNames.append("YIELD SELF FOR RESOURCE " + str(resource))
+
                 self.featuresArray.append(0)
             for plr in game.players:
                 if plr != player:
                     self.featuresArray.append(self.opponentResources[plr][resource])
+                    self.featureNames.append("RESOURCE FOR PLAYER " + str(plr) + " FOR RESOURCE " + str(resource))
+
                     if resource in self.averageYieldOpposingPlayers[plr]:
+                        self.featureNames.append("YIELD FOR PLAYER " + str(plr) + " FOR RESOURCE " + str(resource))
+
                         self.featuresArray.append(self.averageYieldOpposingPlayers[plr][resource])
                     else:
                         self.featuresArray.append(0)
+                        self.featureNames.append("YIELD FOR PLAYER " + str(plr) + " FOR RESOURCE " + str(resource))
+
 
             
         # for coordinate in game.board.intersections:

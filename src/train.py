@@ -262,9 +262,14 @@ for iteration in range(num_iterations):
                     all_rewards[iteration][ep][i] = total_reward[i]
                     final_vps[iteration][ep][i] = game.get_victory_points(game.players[i])
                 for i in range(len(agents)):
-                    if isinstance(agents[i], ActorCritic):
-                        print("Reward: " + str(all_rewards[iteration][ep][i]))
-                        agents[i].terminateEpisode(all_rewards[iteration][ep][i])
+                    if isinstance(agents[i], ActorCritic) and i != current_player_num:
+                        #print("Reward: " + str(all_rewards[iteration][ep][i]))
+                        #agents[i].terminateEpisode(all_rewards[iteration][ep][i])
+                        agents[i].terminateEpisode(0)
+                    if isinstance(agents[i], ActorCritic) and i == current_player_num:
+                        #print("Reward: " + str(all_rewards[iteration][ep][i]))
+                        #agents[i].terminateEpisode(all_rewards[iteration][ep][i])
+                        agents[i].terminateEpisode(100)
                 break
 
             current_player_num = (current_player_num + 1) % len(game.players)
@@ -283,12 +288,12 @@ actorCriticTrainedPolicy = []
 for i in range(numAgents):
     if isinstance(agents[i], ActorCritic):
         actorCriticTrainedPolicy.append(agents[i].theta)
-# file = open("thetaResult.txt", "w")
-# for i in actorCriticTrainedPolicy:
-#     print(str(actorCriticTrainedPolicy[i]))
-#     file.write("%d \n" %actorCriticTrainedPolicy[i])
-# file.close()
-# print(num_games)
+file = open("thetaResult.txt", "w")
+for i in range(len(actorCriticTrainedPolicy)):
+    print(str(actorCriticTrainedPolicy[i]))
+    file.write(str(actorCriticTrainedPolicy[i]) + "\n")
+file.close()
+print(num_games)
 
 # Calculations for each agent
 avg_rewards_agents = np.mean(all_rewards, axis=0)  # Shape: (num_episodes, numAgents)

@@ -1,4 +1,6 @@
 from tkinter import CURRENT
+
+from sympy.logic.inference import valid
 from pycatan.board import BuildingType
 from pycatan import DevelopmentCard
 from argparse import Action
@@ -11,7 +13,7 @@ from agent_files import heuristics
 from agent_files import agent
 
 class ActorCritic(agent.HeuristicAgent):
-    gamma = 0.5
+    gamma = 0.9
     #actions
     #build settlement
     #build road
@@ -57,7 +59,8 @@ class ActorCritic(agent.HeuristicAgent):
             thetaSize = (len(currentStateFlat) + 1)*self.numActions
 
             self.theta = np.zeros(thetaSize)
-            self.w = np.zeros(len(currentStateFlat) + 1)
+            self.w=np.zeros(2)
+            #self.w = np.zeros(len(currentStateFlat) + 1)
         self.firstInitialization = False
         self.newEpisode = True
 
@@ -74,8 +77,8 @@ class ActorCritic(agent.HeuristicAgent):
         valueGradient = nd.Gradient(diffValue)(self.w)
         diffTheta = lambda theta : math.log(self.actionProbabilityPolicyAC(self.previousAction, self.previousAllowedActions, self.previousState, theta))
         thetaGradient = nd.Gradient(diffTheta)(self.theta)
-        self.w =  np.add(self.w, np.multiply(valueGradient, self.alphaW*delta))
-        self.theta = np.add(self.theta, np.multiply(thetaGradient, self.alphaTheta*self.fallOff))
+        self.w =  np.add(self.w, np.multiply(valueGradient, (self.alphaW*delta)))
+        self.theta = np.add(self.theta, np.multiply(thetaGradient, (self.alphaTheta*self.fallOff*delta)))
         self.fallOff = self.fallOff*self.gamma
         return
     
@@ -87,7 +90,7 @@ class ActorCritic(agent.HeuristicAgent):
         actionTheta = theta[currentAction*sliceThetaSize:currentAction*sliceThetaSize+sliceThetaSize]
         return actionTheta
     
-    def chooseAction(self, game, allowedActions, reward=None):
+    def chooseAction(self, game, allowedActions, reward):
         currentState = Features(game, self.player).flattenFeature(game, self.player)
         if self.newEpisode:
             self.fallOff = 1
@@ -99,19 +102,32 @@ class ActorCritic(agent.HeuristicAgent):
             #print("new episode")
             return action
         else:
+            #print("reward :" + str(reward))
+
             delta = reward + self.gamma* self.valueFunction(currentState, self.w) - self.valueFunction(self.previousState, self.w)
+            #print("value current state " + str(self.valueFunction(currentState, self.w)))
+            #print("value prev state " + str(self.valueFunction(self.previousState, self.w)))
+                  
+            #print("W " + str(self.w))
+            #print("DELTA " + str(delta))
             diffValue = lambda w : self.valueFunction(self.previousState, w)
             valueGradient = nd.Gradient(diffValue)(self.w)
+            #print("VALUE GRAD " + str(valueGradient))
             diffTheta = lambda theta : math.log(self.actionProbabilityPolicyAC(self.previousAction, self.previousAllowedActions, self.previousState, theta))
             thetaGradient = nd.Gradient(diffTheta)(self.theta)
+            #print("THETA GRAD " + str(thetaGradient))
             self.w =  np.add(self.w, np.multiply(valueGradient, self.alphaW*delta))
-            self.theta = np.add(self.theta, np.multiply(thetaGradient, self.alphaTheta*self.fallOff))
+            #print("NP MULT W " + str(np.multiply(valueGradient, self.alphaW*delta)))
+            self.theta = np.add(self.theta, np.multiply(thetaGradient, self.alphaTheta*self.fallOff*delta))
+            #print("NP MULT " + str(np.multiply(thetaGradient, self.alphaTheta*self.fallOff)))
             
             self.fallOff = self.fallOff*self.gamma
             self.previousState = currentState
             action = self.actionSelectionPolicyAC(allowedActions, currentState, self.theta)
             self.previousAction = action
             self.previousAllowedActions = allowedActions.copy()
+            #print(len(self.theta))
+            #print(self.theta)
             return action
         
         #we should never get here
@@ -120,10 +136,14 @@ class ActorCritic(agent.HeuristicAgent):
     def valueFunction(self, state, w):
         valueSum = 0
         for i in range(len(w)):
-            if i == len(w) - 1:
+            if i == (len(w) - 1):
                 valueSum += w[i]
             else:
                 valueSum += state[i]*w[i]
+        #print("VALUE SUM " + str(valueSum))
+
+
+        #valueSum = math.sqrt(valueSum)
         return valueSum
     
     def h(self, state, action, theta):
@@ -197,17 +217,21 @@ class ActorCritic(agent.HeuristicAgent):
                 print(theta)
                 raise Exception("Overflow")
         probSum = np.sum(probabilityForAction)
-        return probabilityForAction[actionIndex]/probSum
+        result = probabilityForAction[actionIndex]/probSum
+        if result <= 0 or math.isnan(result):
+            print(result)
+            raise Exception("Invalid Prob")
+        return result
     
     def policy(self, game, current_player_num=None):
-        newScore = (game.get_victory_points(self.player) - 2)*2
+        newScore = game.get_victory_points(self.player) 
        # newScore = game.get_victory_points(self.player) + (sum(self.player.resources.values()) * -.1)
-        reward = newScore - self.oldScore
-        if self.previousAction != 6:
-             reward += 2
-        if self.previousAction == 6  and len(self.previousAllowedActions) > 1:
-             reward -= 10
-        print("reward :" + str(reward))
+        #reward = newScore - self.oldScore
+        reward = 0
+        # if self.previousAction != 6:
+        #      reward += 2
+        # if self.previousAction == 6  and len(self.previousAllowedActions) > 1:
+        #      reward -= 10
 
         self.oldScore = newScore
         validActions = []
