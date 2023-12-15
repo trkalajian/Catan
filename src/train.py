@@ -112,7 +112,12 @@ for iteration in range(num_iterations):
         print(game.board)
         current_player_num = 0
         is_start = False
+        turnNum = 0
+        maxTurns = 2000
+
         while True:
+            turnNum += 1
+            print("Turn Number: " + str(turnNum))
             current_player = game.players[current_player_num]
             # Roll the dice
             dice = random.randint(1, 6) + random.randint(1, 6)
@@ -225,7 +230,7 @@ for iteration in range(num_iterations):
                 vp_rewards = final_vp_reward(game)
                 for i in range(numAgents):
                     total_reward[i] += vp_rewards[i]
-
+            
                 # if isinstance(agents[current_player_num], ActorCritic):
                 #     # This needs to pass in a reward that includes winning the game, put in 100 for now
                 #     total_reward += 100
@@ -271,7 +276,28 @@ for iteration in range(num_iterations):
                         agents[i].terminateEpisode(all_rewards[iteration][ep][i])
                         #agents[i].terminateEpisode(100)
                 break
+            if turnNum == maxTurns:
+                print("Current Victory point standings:")
+                for i in range(len(game.players)):
+                    print("Player %d: %d VP" % (i + 1, game.get_victory_points(game.players[i])))
+                print("Current longest road owner: %s" % (
+                    "Player %d" % (game.players.index(
+                        game.longest_road_owner) + 1) if game.longest_road_owner else "Nobody"))
+                print("Current largest army owner: %s" % (
+                    "Player %d" % (game.players.index(
+                        game.largest_army_owner) + 1) if game.largest_army_owner else "Nobody"))
+                print("The game is a draw")  
+                for i in range(numAgents):
+                    all_rewards[iteration][ep][i] = total_reward[i]
+                    final_vps[iteration][ep][i] = game.get_victory_points(game.players[i])
+                for i in range(len(agents)):
+                    if isinstance(agents[i], ActorCritic) and i != current_player_num:
+                        #print("Reward: " + str(all_rewards[iteration][ep][i]))
+                        #agents[i].terminateEpisode(all_rewards[iteration][ep][i])
+                        agents[i].terminateEpisode(0)
 
+                num_games += 1
+              
             current_player_num = (current_player_num + 1) % len(game.players)
 
         # if num_turns == max_turns:

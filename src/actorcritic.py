@@ -227,14 +227,14 @@ class ActorCritic(agent.HeuristicAgent):
         return result
     
     def policy(self, game, current_player_num=None):
-        newScore = game.get_victory_points(self.player) - 2
-        reward = newScore - self.oldScore
+        #newScore = (game.get_victory_points(self.player) - 2) *0.1
+        #reward = newScore - self.oldScore
         # if self.previousAction != 6:
         #      reward += 2
         # if self.previousAction == 6  and len(self.previousAllowedActions) > 1:
         #      reward -= 10
-
-        self.oldScore = newScore
+        reward = 0
+        #self.oldScore = newScore
         validActions = []
         if self.player.has_resources(BuildingType.SETTLEMENT.get_required_resources()) and game.board.get_valid_settlement_coords(self.player):
             validActions.append(self.BUILD_SETTLEMENT)
