@@ -87,7 +87,7 @@ class Features():
     def flattenFeature(self, game:Game, player:Player):
         self.featuresArray = []
         #function to flatten features so that they are in a consistent order and consumable by an agent
-        #feature order player VP, op VP, player resources, player yield, op resources, op yield, player settlementspots, op settlement spots, resource locations
+        #feature order player VP, op VP, player resources, player yield, op resources, op yield, 
         self.featuresArray.append(self.currentPlayerVictoryPoints)
         for plr in game.players:
                 if plr != player:

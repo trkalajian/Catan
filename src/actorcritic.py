@@ -200,14 +200,14 @@ class ActorCritic(agent.HeuristicAgent):
         return probabilityForAction[actionIndex]/probSum
     
     def policy(self, game, current_player_num=None):
-        newScore = game.get_victory_points(self.player) - 2
+        newScore = (game.get_victory_points(self.player) - 2)*2
        # newScore = game.get_victory_points(self.player) + (sum(self.player.resources.values()) * -.1)
         reward = newScore - self.oldScore
         print("reward :" + str(reward))
         if self.previousAction != 6:
-             reward += 1
+             reward += 2
         if self.previousAction == 6  and len(self.previousAllowedActions) > 1:
-             reward -= 1
+             reward -= 4
         self.oldScore = newScore
         validActions = []
         if self.player.has_resources(BuildingType.SETTLEMENT.get_required_resources()) and game.board.get_valid_settlement_coords(self.player):
