@@ -501,7 +501,7 @@ class Board:
         Args:
             player: The player to calculate the longest road for
         Returns:
-            The length of the ongest road segment
+            The length of the longest road segment
         """
         paths = [
             e
