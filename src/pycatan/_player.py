@@ -20,6 +20,7 @@ class Player:
         self.development_cards = {d: 0 for d in DevelopmentCard}
         self.connected_harbors = set()
         self.number_played_knights = 0
+        self.num_roads = 15
 
     def has_resources(self, resources: Dict[Resource, int]) -> bool:
         """Check if the player has the resources given.

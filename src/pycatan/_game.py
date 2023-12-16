@@ -109,15 +109,20 @@ class Game:
             raise NotEnoughResourcesError(
                 "Player does not have the resources to build a road"
             )
-        self.board.add_path_building(
-            player=player,
-            path_coords=path_coords,
-            building_type=BuildingType.ROAD,
-            ensure_connected=ensure_connected,
-        )
-        # Remove the resources
-        if cost_resources:
-            player.remove_resources(BuildingType.ROAD.get_required_resources())
+        if player.num_roads <= 0:
+            print("Player has no roads left")
+        else:
+            self.board.add_path_building(
+                player=player,
+                path_coords=path_coords,
+                building_type=BuildingType.ROAD,
+                ensure_connected=ensure_connected,
+            )
+            # Remove the resources
+            if cost_resources:
+                player.remove_resources(BuildingType.ROAD.get_required_resources())
+
+            player.num_roads -= 1
 
         # Check if the player gets longest road
         road_length = self.board.calculate_player_longest_road(player)
@@ -201,7 +206,7 @@ class Game:
             raise NotEnoughResourcesError(
                 "Player does not have enough resources to build a development card"
             )
-        
+
         card = self.development_card_deck.pop(0)
         player.development_cards[card] += 1
         player.remove_resources(DevelopmentCard.get_required_resources())
