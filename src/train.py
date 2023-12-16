@@ -1,25 +1,26 @@
 from pycatan import Game, DevelopmentCard, Resource
 from pycatan.board import BeginnerBoard, BoardRenderer, BuildingType
-from methods import choose_path, choose_intersection, choose_resource, move_robber, count_cards, resource_check, \
-    choose_hex, get_coord_sort_by_xy
+from methods import choose_path, choose_intersection, choose_resource, move_robber, count_cards, resource_check, choose_hex, get_coord_sort_by_xy
 from agent_files.heuristics import heuristic_policy
-from agent_files.agent import HeuristicAgent
-from agent_files.heuristics import build_settlement, place_settlement, heuristic_policy, choose_road_placement, \
-    place_robber, choose_best_trade, place_city
+from agent_files.agent import HeuristicAgent, DQNAgent, EpsilonGreedyPolicy
+from agent_files.heuristics import build_settlement, place_settlement, heuristic_policy, choose_road_placement, place_robber, choose_best_trade, place_city
 import actorcritic
 import random
-import sys
+import pickle
+import os
+import pandas as pd
 import numpy as np
 from actorcritic import ActorCritic
 import matplotlib.pyplot as plt
 
+
 # set number of players here
-numAgents = 2
-num_iterations = 10
-num_episodes = 100
+numAgents = 4
+num_iterations = 2
+num_episodes = 6
+save_every = 2
 all_rewards = np.zeros((num_iterations, num_episodes, numAgents))
 final_vps = np.zeros((num_iterations, num_episodes, numAgents))
-agents = []
 winsPerPlayer = np.zeros(numAgents)
 
 
@@ -31,6 +32,30 @@ def create_new_game():
     game = Game(board, numAgents)
     renderer = BoardRenderer(game.board, {})
     return game, renderer
+
+def save_progress(agents, all_rewards, final_vps, episode, iteration):
+    """
+    Saves the policies of non-Heuristic agents, all_rewards, and final_vps.
+    """
+    # Creating directories if they don't exist
+    os.makedirs('results/theta', exist_ok=True)
+    os.makedirs('results/dqn', exist_ok=True)
+    os.makedirs('results/rewards', exist_ok=True)
+    os.makedirs('results/final_vps', exist_ok=True)
+
+    # Iterate through agents and save their policies if they are not exactly HeuristicAgents
+    for i, agent in enumerate(agents):
+        if type(agent) is not HeuristicAgent:
+            policy_type = 'theta' if hasattr(agent, 'theta') else 'dqn'
+            policy_filename = f'results/{policy_type}/{policy_type}_policy_{episode+1}_{iteration+1}.pkl'
+            with open(policy_filename, 'wb') as f:
+                policy_data = agent.theta if hasattr(agent, 'theta') else agent.model.state_dict()
+                pickle.dump(policy_data, f)
+            print(f"Saved policy for Player {i} ({policy_type}) at episode {episode+1}, iteration {iteration+1}")
+
+    np.savetxt(f'results/rewards/{iteration}iteration_rewards_{episode+1}.csv', all_rewards[iteration], delimiter=',')
+    np.savetxt(f'results/final_vps/{iteration}iteration_vps_{episode+1}.csv', final_vps[iteration], delimiter=',')
+    print(f"Rewards and victory points saved at episode {episode+1}, iteration {iteration+1}")
 
 
 # function to calculate the reward from the most recent distribution of resources
@@ -52,6 +77,7 @@ def final_vp_reward(game):
     return vp_rewards
 
 
+#  method to build an agent that runs solely using heuristics
 def heuristic_agent_maker():
     heur_policy = heuristic_policy
     return HeuristicAgent(
@@ -63,29 +89,58 @@ def heuristic_agent_maker():
         place_city_func=place_city
     )
 
+# method to build an agent that runs DQN. Contains all hyperparameters and heuristics
+def DQN_agent_maker():
+    return DQNAgent(input_size=22,
+                    output_size=7,
+                    place_settlement_func=place_settlement,
+                    place_road_func=choose_road_placement,
+                    place_robber_func=place_robber,
+                    choose_best_trade=choose_best_trade,
+                    place_city_func=place_city,
+                    memory_size=500,
+                    batch_size=32,
+                    gamma=0.99,
+                    epsilon=0.9,
+                    epsilon_min=0.01,
+                    epsilon_decay=0.995,
+                    learning_rate=0.001
+                    )
 
-for i in range(numAgents):
-    # change some of these to actor-critics when appropriate
+# method to implement actor critic
+def actor_critic_maker():
+    return actorcritic.ActorCritic(place_settlement_func=place_settlement,
+                                    place_road_func=choose_road_placement,
+                                    place_robber_func=place_robber,
+                                    choose_best_trade=choose_best_trade,
+                                    place_city_func=place_city
+                                   )
 
-    if i >= 1:
-        agent = heuristic_agent_maker()
-        agents.append(agent)
-    else:
-        # creates an actor critic
-        agents.append(actorcritic.ActorCritic(place_settlement_func=place_settlement,
-                                              place_road_func=choose_road_placement,
-                                              place_robber_func=place_robber,
-                                              choose_best_trade=choose_best_trade,
-                                              place_city_func=place_city))
-
-# Main game loop
+# for i in range(numAgents):
+#     # change some of these to actor-critics when appropriate
+#     if i >= 1:
+#         agents.append(heuristic_agent_maker())
+#     else:
+#         # creates an actor critic
+#         agents.append(actor_critic_maker())
+#
+# # Main game loop
 current_player_num = 0
 is_start = False
 num_games = 0
-
 for iteration in range(num_iterations):
+    agents = []
+    for j in range(numAgents):
+        # change some of these to actor-critics when appropriate
+        if j >= 1:
+            agents.append(heuristic_agent_maker())
+        else:
+            # creates an actor critic
+            agents.append(actor_critic_maker())
+
+    # Main game loop
     for ep in range(num_episodes):
-        print("Game Number: " + str(num_games + 1)+ " ******************************************************************")
+        print("Game Number: " + str(num_games + 1))
         total_reward = np.zeros(numAgents)  # Initialize total reward for this episode
         # Create a new board and game for each iteration to reset the board
         game, renderer = create_new_game()
@@ -93,11 +148,10 @@ for iteration in range(num_iterations):
         player_order = list(range(len(game.players)))
         random.shuffle(player_order)
 
-        is_start = False
         for i in player_order + list(reversed(player_order)):
             is_start = True
             current_player = game.players[i]
-            if isinstance(agents[i], ActorCritic):
+            if type(agents[i]) is actorcritic.ActorCritic:
                 agents[i].initializeEpisode(game, current_player)
             # coords = choose_intersection(game.board.get_valid_settlement_coords(current_player, ensure_connected=False),
             #                              "Where do you want to build your settlement? ")
@@ -112,12 +166,7 @@ for iteration in range(num_iterations):
         print(game.board)
         current_player_num = 0
         is_start = False
-        turnNum = 0
-        maxTurns = 2000
-
         while True:
-            turnNum += 1
-            print("Turn Number: " + str(turnNum))
             current_player = game.players[current_player_num]
             # Roll the dice
             dice = random.randint(1, 6) + random.randint(1, 6)
@@ -147,7 +196,7 @@ for iteration in range(num_iterations):
                 while True:
                     try:
                         choice = agents[current_player_num].policy(game, current_player_num)
-                        #print(choice)
+                        print(choice)
                         if 1 <= choice[0] <= 4:
                             break  # Valid choice, exit the loop
                     except ValueError:
@@ -230,7 +279,7 @@ for iteration in range(num_iterations):
                 vp_rewards = final_vp_reward(game)
                 for i in range(numAgents):
                     total_reward[i] += vp_rewards[i]
-            
+
                 # if isinstance(agents[current_player_num], ActorCritic):
                 #     # This needs to pass in a reward that includes winning the game, put in 100 for now
                 #     total_reward += 100
@@ -268,58 +317,32 @@ for iteration in range(num_iterations):
                     final_vps[iteration][ep][i] = game.get_victory_points(game.players[i])
                 for i in range(len(agents)):
                     if isinstance(agents[i], ActorCritic) and i != current_player_num:
-                        #print("Reward: " + str(all_rewards[iteration][ep][i]))
-                        #agents[i].terminateEpisode(all_rewards[iteration][ep][i])
+                        # print("Reward: " + str(all_rewards[iteration][ep][i]))
+                        # agents[i].terminateEpisode(all_rewards[iteration][ep][i])
                         agents[i].terminateEpisode(0)
                     if isinstance(agents[i], ActorCritic) and i == current_player_num:
-                        print("Reward: " + str(all_rewards[iteration][ep][i]))
-                        agents[i].terminateEpisode(all_rewards[iteration][ep][i])
-                        #agents[i].terminateEpisode(100)
+                        # print("Reward: " + str(all_rewards[iteration][ep][i]))
+                        # agents[i].terminateEpisode(all_rewards[iteration][ep][i])
+                        agents[i].terminateEpisode(100)
+                # saves the policy, rewards, and final VPs every save_every episodes
+                if ep % save_every == 0:
+                    save_progress(agents, all_rewards, final_vps, ep, iteration)
                 break
-            if turnNum == maxTurns:
-                print("Current Victory point standings:")
-                for i in range(len(game.players)):
-                    print("Player %d: %d VP" % (i + 1, game.get_victory_points(game.players[i])))
-                print("Current longest road owner: %s" % (
-                    "Player %d" % (game.players.index(
-                        game.longest_road_owner) + 1) if game.longest_road_owner else "Nobody"))
-                print("Current largest army owner: %s" % (
-                    "Player %d" % (game.players.index(
-                        game.largest_army_owner) + 1) if game.largest_army_owner else "Nobody"))
-                print("The game is a draw")  
-                for i in range(numAgents):
-                    all_rewards[iteration][ep][i] = total_reward[i]
-                    final_vps[iteration][ep][i] = game.get_victory_points(game.players[i])
-                for i in range(len(agents)):
-                    if isinstance(agents[i], ActorCritic) and i != current_player_num:
-                        #print("Reward: " + str(all_rewards[iteration][ep][i]))
-                        #agents[i].terminateEpisode(all_rewards[iteration][ep][i])
-                        agents[i].terminateEpisode(0)
 
-                num_games += 1
-              
             current_player_num = (current_player_num + 1) % len(game.players)
 
-        # if num_turns == max_turns:
-        #     print("Number of Turns: " + str(num_turns))
-        #     for i in range(len(game.players)):
-        #         print("Player %d has won %d times " % ((game.players[i] + 1), winsPerPlayer[game.players[i]]))
-        #
-        #     num_games += 1
-        #     for i in range(len(agents)):
-        #         agents[i].terminateEpisode(game.get_victory_points(game.players[i]))
 
 # the final policy is stored here
-actorCriticTrainedPolicy = []
-for i in range(numAgents):
-    if isinstance(agents[i], ActorCritic):
-        actorCriticTrainedPolicy.append(agents[i].theta)
-file = open("thetaResult.txt", "w")
-for i in range(len(actorCriticTrainedPolicy)):
-    print(str(actorCriticTrainedPolicy[i]))
-    file.write(str(actorCriticTrainedPolicy[i]) + "\n")
-file.close()
-print(num_games)
+# actorCriticTrainedPolicy = []
+# for i in range(numAgents):
+#     if isinstance(agents[i], ActorCritic):
+#         actorCriticTrainedPolicy.append(agents[i].theta)
+# file = open("thetaResult.txt", "w")
+# for i in range(len(actorCriticTrainedPolicy)):
+#     print(str(actorCriticTrainedPolicy[i]))
+#     file.write(str(actorCriticTrainedPolicy[i]) + "\n")
+# file.close()
+# print(num_games)
 
 # Calculations for each agent
 avg_rewards_agents = np.mean(all_rewards, axis=0)  # Shape: (num_episodes, numAgents)
