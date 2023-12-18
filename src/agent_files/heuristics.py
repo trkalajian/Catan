@@ -56,9 +56,33 @@ def build_roads(game, current_player_num):
 
 
 # choose where to place road, prioritizing the open road slot that leads to the intersection with the highest value
-def choose_road_placement(game, current_player_num):
+def choose_road_placement(game, current_player_num, is_start):
     current_player = game.players[current_player_num]
     valid_road_coords = game.board.get_valid_road_coords(current_player, ensure_connected=True)
+
+    # If it's the start of the game, adjust valid_road_coords for settlements with no connected roads
+    if is_start:
+        unconnected_settlement_coords = []
+
+        # Check each settlement of the current player
+        for coords, intersection in game.board.intersections.items():
+            if intersection.building is not None and intersection.building.owner == current_player and intersection.building.building_type == BuildingType.SETTLEMENT:
+                connected_paths = game.board.get_paths_for_intersection_coords(coords)
+                if not any(path.building is not None and path.building.owner == current_player for path in connected_paths):
+                    unconnected_settlement_coords.append(coords)
+
+        if unconnected_settlement_coords:
+            # Adjust valid_road_coords to only include roads adjacent to unconnected settlements
+            new_valid_road_coords = set()
+            for settlement_coords in unconnected_settlement_coords:
+                connected_intersections = game.board.get_intersection_connected_intersections(game.board.intersections[settlement_coords])
+                for connected_intersection in connected_intersections:
+                    path_coords = frozenset({settlement_coords, connected_intersection.coords})
+                    if path_coords in game.board.paths:
+                        new_valid_road_coords.add(path_coords)
+            valid_road_coords = new_valid_road_coords.intersection(valid_road_coords)
+
+
 
     if valid_road_coords:
         best_road_coords = None
@@ -76,9 +100,6 @@ def choose_road_placement(game, current_player_num):
                         highest_neighbor_value = intersection_value
 
         return best_road_coords
-
-    return None  # Return None if no valid road placement is found
-
 
     return None  # Return None if no valid road placement is found
 
@@ -232,6 +253,8 @@ def calculate_resource_production_totals(game, current_player):
 
     return production_totals
 
+# with the trade action selected choose the best one by taking the resource the player has the lowest production
+# capacity for. If that resource is being traded choose second most
 def choose_best_trade(game, current_player_num, possible_trades):
     current_player = game.players[current_player_num]
     resource_production_totals = calculate_resource_production_totals(game, current_player)
