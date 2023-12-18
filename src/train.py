@@ -2,7 +2,7 @@ from pycatan import Game, DevelopmentCard, Resource
 from pycatan.board import BeginnerBoard, BoardRenderer, BuildingType
 from methods import choose_path, choose_intersection, choose_resource, move_robber, count_cards, resource_check, choose_hex, get_coord_sort_by_xy
 from agent_files.heuristics import heuristic_policy
-from agent_files.agent import HeuristicAgent, EpsilonGreedyPolicy
+from agent_files.agent import HeuristicAgent, EpsilonGreedyPolicy, DQNAgent
 from agent_files.heuristics import build_settlement, place_settlement, heuristic_policy, choose_road_placement, place_robber, choose_best_trade, place_city
 import actorcritic
 import random
@@ -90,22 +90,22 @@ def heuristic_agent_maker():
     )
 
 # method to build an agent that runs DQN. Contains all hyperparameters and heuristics
-#def DQN_agent_maker():
-    # return DQNAgent(input_size=22,
-    #                 output_size=7,
-    #                 place_settlement_func=place_settlement,
-    #                 place_road_func=choose_road_placement,
-    #                 place_robber_func=place_robber,
-    #                 choose_best_trade=choose_best_trade,
-    #                 place_city_func=place_city,
-    #                 memory_size=500,
-    #                 batch_size=32,
-    #                 gamma=0.99,
-    #                 epsilon=0.9,
-    #                 epsilon_min=0.01,
-    #                 epsilon_decay=0.995,
-    #                 learning_rate=0.001
-    #                 )
+def DQN_agent_maker():
+    return DQNAgent(input_size=22,
+                    output_size=7,
+                    place_settlement_func=place_settlement,
+                    place_road_func=choose_road_placement,
+                    place_robber_func=place_robber,
+                    choose_best_trade=choose_best_trade,
+                    place_city_func=place_city,
+                    memory_size=500,
+                    batch_size=32,
+                    gamma=0.99,
+                    epsilon=0.9,
+                    epsilon_min=0.01,
+                    epsilon_decay=0.995,
+                    learning_rate=0.001
+                    )
 
 # method to implement actor critic
 def actor_critic_maker():
