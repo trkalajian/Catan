@@ -282,7 +282,7 @@ class ActorCritic(agent.HeuristicAgent):
             validActions.append(self.BUILD_SETTLEMENT)
         if self.player.has_resources(BuildingType.CITY.get_required_resources()) and game.board.get_valid_city_coords(self.player):
             validActions.append(self.BUILD_CITY)
-        if self.player.has_resources(BuildingType.ROAD.get_required_resources()) and game.board.get_valid_road_coords(self.player):
+        if self.player.has_resources(BuildingType.ROAD.get_required_resources()) and game.board.get_valid_road_coords(self.player) and self.player.num_roads > 0:
             validActions.append(self.BUILD_ROAD)
         if self.player.has_resources(DevelopmentCard.get_required_resources()) and game.development_card_deck:
             validActions.append(self.BUILD_CARD)
