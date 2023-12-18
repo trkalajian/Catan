@@ -47,7 +47,7 @@ def build_roads(game, current_player_num):
     current_player = game.players[current_player_num]
 
     # Check if the player has enough resources to build a road
-    if current_player.has_resources(BuildingType.ROAD.get_required_resources()):
+    if current_player.has_resources(BuildingType.ROAD.get_required_resources()) and current_player.num_roads > 0:
         valid_road_coords = game.board.get_valid_road_coords(current_player, ensure_connected=True)
         if valid_road_coords:
             return [1, 3]
