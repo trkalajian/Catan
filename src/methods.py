@@ -133,7 +133,7 @@ def resource_check(card_totals, game):
 
             # Update the rewards array only if cards are discarded
             if cards_to_discard > 0:
-                discard_rewards[i] = -0.2 * cards_to_discard
+                discard_rewards[i] = -0.5 * cards_to_discard
 
             print(f"Player {i + 1} discarded {cards_to_discard}")
         else:
