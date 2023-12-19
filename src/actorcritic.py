@@ -50,7 +50,8 @@ class ActorCritic(agent.HeuristicAgent):
         self.previousState = None
         self.previousAction = None
         self.previousAllowedActions = []
-        
+        #thetaSize = (len(currentStateFlat) + 1)*self.numActions
+
         myPath = "results/theta/"
         #thetaFiles = [f for f in listdir(myPath) if isfile(join(myPath, f))]
         thetaFiles = glob.glob(str(myPath)+'*')
@@ -109,11 +110,7 @@ class ActorCritic(agent.HeuristicAgent):
         self.player = player
         if self.firstInitialization:
             currentState = Features(game, self.player)
-            currentStateFlat = currentState.flattenFeature(game, self.player)
-
-            thetaSize = (len(currentStateFlat) + 1)*self.numActions
-            
-
+            #currentStateFlat = currentState.flattenFeature(game, self.player)
             self.w=np.zeros(2)
             #self.w = np.zeros(len(currentStateFlat) + 1)
         self.firstInitialization = False
@@ -164,7 +161,7 @@ class ActorCritic(agent.HeuristicAgent):
             #print("value prev state " + str(self.valueFunction(self.previousState, self.w)))
                   
             #print("W " + str(self.w))
-            print("DELTA " + str(delta))
+            #print("DELTA " + str(delta))
             diffValue = lambda w : self.valueFunction(self.previousState, w)
             valueGradient = nd.Gradient(diffValue)(self.w)
             #print("VALUE GRAD " + str(valueGradient))

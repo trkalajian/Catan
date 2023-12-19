@@ -17,7 +17,7 @@ from actorcritic import ActorCritic
 import matplotlib.pyplot as plt
 
 # set number of players here
-numAgents = 4
+numAgents = 2
 num_iterations = 10
 num_episodes = 250
 save_every = 100
@@ -139,7 +139,8 @@ def actor_critic_maker():
 current_player_num = 0
 is_start = False
 num_games = 0
-num_turns = 0
+#max turns to prevent game lock
+maxTurns = 3000
 for iteration in range(num_iterations):
     agents = []
     for j in range(numAgents):
@@ -153,6 +154,8 @@ for iteration in range(num_iterations):
 
     # Main game loop
     for ep in range(num_episodes):
+        num_turns = 0
+
         print("Game Number: " + str(num_games + 1))
         total_reward = np.zeros(numAgents)  # Initialize total reward for this episode
         # Create a new board and game for each iteration to reset the board
@@ -182,6 +185,7 @@ for iteration in range(num_iterations):
         dice = 0
         while True:
             num_turns += 1
+            print(num_turns)
             current_player = game.players[current_player_num]
             current_feats = Features(game, current_player)
             current_state = current_feats.flattenFeature(game, game.players[current_player_num])  # get the current state before action
@@ -224,7 +228,7 @@ for iteration in range(num_iterations):
                             choices.append(choice)
                         else:
                             choice = agents[current_player_num].policy(game, current_player_num)
-                        print(choice)
+                        #print(choice)
                         if 1 <= choice[0] <= 4:
                             break  # Valid choice, exit the loop
                     except ValueError:
@@ -303,6 +307,7 @@ for iteration in range(num_iterations):
                     #             amount = player.resources[resource]
                     #             player.remove_resources({resource: amount})
                     #             current_player.add_resources({resource: amount})
+
             if game.get_victory_points(current_player) >= 10:
                 winsPerPlayer[current_player_num] += 1
                 # Calculate final VP rewards for all players
@@ -355,6 +360,23 @@ for iteration in range(num_iterations):
                 # saves the policy, rewards, and final VPs every save_every episodes
                 if ep % save_every == 0:
                     save_progress(agents, all_rewards, final_vps, ep, iteration)
+                break
+            if num_turns >= maxTurns:
+                print("Current Victory point standings:")
+                for i in range(len(game.players)):
+                    print("Player %d: %d VP" % (i + 1, game.get_victory_points(game.players[i])))
+                print("Current longest road owner: %s" % (
+                    "Player %d" % (game.players.index(
+                        game.longest_road_owner) + 1) if game.longest_road_owner else "Nobody"))
+                print("Current largest army owner: %s" % (
+                    "Player %d" % (game.players.index(
+                        game.largest_army_owner) + 1) if game.largest_army_owner else "Nobody"))
+                print("Game is a Draw")
+                for i in range(len(game.players)):
+                    print("Player %d has won %d times " % ((i + 1), winsPerPlayer[i]))
+                print("Final board:")
+                print(game.board)
+                num_games += 1
                 break
 
             if isinstance(agents[current_player_num], DQNAgent) and not is_start:
