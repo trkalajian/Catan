@@ -107,7 +107,7 @@ def count_cards(game):
     return card_totals
 
 # takes any player over 7 cards and performs the discard action randomly
-def resource_check(card_totals, game):
+def   resource_check(card_totals, game):
     discard_rewards = np.zeros(len(card_totals))  # Initialize rewards array
 
     for i, total in enumerate(card_totals):
@@ -133,7 +133,7 @@ def resource_check(card_totals, game):
 
             # Update the rewards array only if cards are discarded
             if cards_to_discard > 0:
-                discard_rewards[i] = -0.5 * cards_to_discard
+                discard_rewards[i] = -1 * cards_to_discard
 
             print(f"Player {i + 1} discarded {cards_to_discard}")
         else:
