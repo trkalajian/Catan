@@ -113,7 +113,7 @@ def resource_check(card_totals, game):
     for i, total in enumerate(card_totals):
         if total > 7:
             player = game.players[i]
-            print(f"Player {i + 1} has more than 7 cards ({total} cards). Discarding Resources.")
+            #print(f"Player {i + 1} has more than 7 cards ({total} cards). Discarding Resources.")
 
             # Calculate the number of cards to discard (half, rounding up)
             cards_to_discard = math.ceil(total / 2)
@@ -135,7 +135,7 @@ def resource_check(card_totals, game):
             if cards_to_discard > 0:
                 discard_rewards[i] = -0.5 * cards_to_discard
 
-            print(f"Player {i + 1} discarded {cards_to_discard}")
+            #print(f"Player {i + 1} discarded {cards_to_discard}")
         else:
             # Reward for not discarding any cards
             discard_rewards[i] = 0
