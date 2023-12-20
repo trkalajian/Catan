@@ -1,176 +1,126 @@
-# from heuristics import build_settlement, place_settlement
 import torch
+import torch.nn as nn
 import torch.optim as optim
-import torch.nn.functional as F
-from torch.utils.tensorboard import SummaryWriter
+from pycatan import Game, DevelopmentCard, Resource
+from pycatan.board import BeginnerBoard, BoardRenderer, BuildingType
 import random
 import numpy as np
-from agent_files.DQN import DQNNetwork, ExperienceReplay, EpsilonGreedyPolicy
-from features import Features  # Import the Features class
-from collections import namedtuple
+import torch.nn.functional as F
+
+POSSIBLE_ACTIONS = np.arange(start=0, stop=7)
+
+def q_learning(action_values, old_state, action, reward, new_state, alpha, gamma):
+    new_action = greedy(action_values[new_state])
+    action_values[old_state][action] += alpha * (
+            reward + gamma * action_values[new_state][new_action] - action_values[old_state][action]
+    )
+    return None
+
+def greedy(state_action_values):
+    max_actions = [action for action in state_action_values if
+                   state_action_values[action] == max(state_action_values.values())]
+    return random.choice(max_actions)
+
+class EpsilonGreedyPolicy:
+    # Define action constants
+    BUILD_SETTLEMENT = 0
+    BUILD_CITY = 1
+    BUILD_ROAD = 2
+    BUILD_CARD = 3
+    MAKE_TRADE = 4
+    PLAY_KNIGHT = 5
+    PASS_TURN = 6
+
+    def __init__(self, q_network, initial_epsilon, min_epsilon, decay_rate, random_state=None):
+        self.q_network = q_network
+        self.epsilon = initial_epsilon
+        self.decay_rate = decay_rate
+        self.min_epsilon = min_epsilon
+        self.random_state = random_state or np.random.RandomState(seed=0)
+
+    def explore(self):
+        return self.random_state.binomial(n=1, p=self.epsilon) == 1
+
+    def decay_epsilon(self):
+        self.epsilon = max(self.min_epsilon, self.epsilon * self.decay_rate)
+
+    def __call__(self, state, game, player):
+        state_tensor = torch.from_numpy(np.array(state, dtype=np.float32))
+
+        # Determine valid actions
+        validActions = []
+        if player.has_resources(BuildingType.SETTLEMENT.get_required_resources()) and game.board.get_valid_settlement_coords(player):
+            validActions.append(self.BUILD_SETTLEMENT)
+        if player.has_resources(BuildingType.CITY.get_required_resources()) and game.board.get_valid_city_coords(player):
+            validActions.append(self.BUILD_CITY)
+        if player.has_resources(BuildingType.ROAD.get_required_resources()) and game.board.get_valid_road_coords(player) and player.num_roads > 0:
+            validActions.append(self.BUILD_ROAD)
+        if player.has_resources(DevelopmentCard.get_required_resources()) and game.development_card_deck:
+            validActions.append(self.BUILD_CARD)
+        if player.get_possible_trades():
+            validActions.append(self.MAKE_TRADE)
+        if DevelopmentCard.KNIGHT in [card for card, amount in player.development_cards.items() if amount > 0]:
+            validActions.append(self.PLAY_KNIGHT)
+        validActions.append(self.PASS_TURN)
+
+        # Choose action
+        if self.explore():
+            print("I explored!")
+            pass_penalty = False
+            action = random.choice(validActions)
+            if action == 6 and len(validActions) > 1:
+                pass_penalty = True
+            return action, pass_penalty
+        else:
+            q_values = self.q_network(state_tensor)
+            # Initialize masked_q_values with '-inf'
+            masked_q_values = torch.full_like(q_values, float('-inf'))
+
+            # Update masked_q_values only for valid actions
+            for action in validActions:
+                masked_q_values[action] = q_values[action]
+
+            # Select the action with the highest q-value among valid actions
+            action = POSSIBLE_ACTIONS[int(torch.argmax(masked_q_values))]
+            pass_penalty = False
+            if action == 6 and len(validActions)>1:
+                pass_penalty = True
+            return action, pass_penalty
 
 
-Transition = namedtuple('Transition', ('state', 'action', 'next_state', 'reward', 'done'))
+class DQNNetwork(nn.Module):
+    def __init__(self, input_size, output_size):
+        super(DQNNetwork, self).__init__()
+        self.fc1 = nn.Linear(input_size, 128)
+        self.relu = nn.ReLU()
+        self.fc2 = nn.Linear(128, 64)
+        self.fc3 = nn.Linear(64, output_size)
+
+    def forward(self, x):
+        x = self.relu(self.fc1(x))
+        x = self.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
 
 
-# class to initialize the heuristic agent
-class HeuristicAgent:
-    def __init__(self, policy, place_settlement_func, place_road_func, place_robber_func, choose_best_trade, place_city_func):
-        self.policy = policy
-        self.place_settlement_func = place_settlement_func
-        self.place_road = place_road_func
-        self.place_robber = place_robber_func
-        self.choose_trade_func = choose_best_trade
-        self.place_city_func = place_city_func
+class ExperienceReplay:
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.memory = []
 
-    def choose_action(self, game, current_player_num, is_start):
-        # Implement your heuristic policy logic here
-        action = self.policy(game, current_player_num, is_start)
-        return action
+    def push(self, state, action, next_state, reward, done):
+        self.memory.append((state, action, next_state, reward, done))
+        if len(self.memory) > self.capacity:
+            self.memory.pop(0)
 
-    def place_settlement(self, game, current_player_num, is_start):
-        # Call the heuristic function to choose the settlement location
-        settlement_coords = self.place_settlement_func(game, current_player_num, is_start)
-        return settlement_coords  # Return the chosen settlement coordinates
+    def sample(self, batch_size):
+        return random.sample(self.memory, batch_size)
 
-    def place_road(self, game, current_player_num):
-        road_coords = self.place_road(game, current_player_num)
-        return road_coords
+# Initialize experience replay buffer
+# experience_replay = ExperienceReplay(capacity=500)
 
-    def place_robber(self, game, current_player_num):
-        robber_coords = self.place_robber(game, current_player_num)
-        return robber_coords
+def mask_actions(valid_actions, action_values):
+    masked_values = action_values.clone()
+    masked_values[~valid_actions] = float('-inf')
+    return masked_values
 
-    def choose_trade_func(self, game, current_player_num, possible_trades):
-        trade = self.choose_trade_func(game, current_player_num, possible_trades)
-        return trade
-
-    def place_city_func(self, game, valid_city_coords):
-        city_coords = self.place_city_func(game, valid_city_coords)
-        return city_coords
-
-
-class DQNAgent(HeuristicAgent):
-    # Initialize the DQN Agent
-    def __init__(self, input_size, output_size, place_settlement_func, place_road_func, place_robber_func,
-                 choose_best_trade, place_city_func, memory_size=500, batch_size=32, gamma=0.99, epsilon=1.0,
-                 epsilon_min=0.01, epsilon_decay=0.995, learning_rate=0.001, log_dir="runs/DQNAgent"):
-        super().__init__(self.dqn_policy, place_settlement_func, place_road_func, place_robber_func, choose_best_trade,
-                         place_city_func)
-
-        # Initialize the main model and the target model for DQN
-        self.model = DQNNetwork(input_size, output_size)
-        self.target_model = DQNNetwork(input_size, output_size)
-        self.target_model.load_state_dict(self.model.state_dict())
-
-        # Initialize experience replay for storing transitions
-        self.experience_replay = ExperienceReplay(memory_size)
-
-        # Define the epsilon-greedy policy for action selection
-        self.policy = EpsilonGreedyPolicy(self.model, epsilon, epsilon_min, epsilon_decay)
-
-        # Methods to visualize agent training
-        self.writer = SummaryWriter(log_dir=log_dir)
-        self.total_training_steps = 0
-
-        # Initialize training parameters
-        self.batch_size = batch_size
-        self.gamma = gamma
-        self.optimizer = optim.Adam(self.model.parameters(), lr=learning_rate)
-
-    # Define the policy to use for the DQN agent
-    def dqn_policy(self, game, current_player_num):
-        state = self.get_state(game, current_player_num)
-        action_number, pass_penalty = self.policy(state, game, game.players[current_player_num])
-
-        # Map the action number to the corresponding game action
-        action_mapping = {
-            0: [1, 1],
-            1: [1, 2],
-            2: [1, 3],
-            3: [1, 4],
-            4: [2, None],
-            5: [3, None],
-            6: [4, None]
-        }
-
-        return action_mapping.get(action_number, [4, None]), pass_penalty  # Default action if action_number is not in the mapping
-
-    # Get the current state representation for the DQN input
-    def get_state(self, game, current_player_num):
-        features = Features(game, game.players[current_player_num])
-        state = features.flattenFeature(game, game.players[current_player_num])
-        return np.array(state, dtype=np.float32)
-
-    # Training step for the DQN agent
-    def train(self, ep, total_reward):
-        # Check if the memory is sufficient for training
-        if len(self.experience_replay.memory) < self.batch_size:
-            return
-        transitions = self.experience_replay.sample(self.batch_size)
-        batch = Transition(*zip(*transitions))
-
-        # Convert each state, action, and reward in the batch to a Tensor
-        state_batch = torch.stack([torch.tensor(s, dtype=torch.float32) for s in batch.state])
-        action_batch = torch.tensor([a for a in batch.action], dtype=torch.long)
-        action_batch = action_batch.unsqueeze(1)
-        reward_batch = torch.tensor([r for r in batch.reward], dtype=torch.float32)
-
-        # Create a mask of non-final states
-        non_final_mask = torch.tensor(tuple(map(lambda s: s is not None, batch.next_state)), dtype=torch.bool)
-        non_final_next_states = torch.stack(
-            [torch.tensor(s, dtype=torch.float32) for s in batch.next_state if s is not None])
-
-        # Compute current Q values
-        state_action_values = self.model(state_batch).gather(1, action_batch)
-
-        # Compute next Q values from the target network for non-final states
-        next_state_values = torch.zeros(self.batch_size)
-        next_state_values[non_final_mask] = self.target_model(non_final_next_states).max(1)[0].detach()
-
-        # Compute the expected Q values
-        expected_state_action_values = (next_state_values * self.gamma) + reward_batch
-
-        # Compute the loss
-        loss = F.smooth_l1_loss(state_action_values, expected_state_action_values.unsqueeze(1))
-
-        # Optimize the model
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
-
-        # Update epsilon for the epsilon-greedy policy
-        self.policy.decay_epsilon()
-
-        self.writer.add_scalar('Loss/train', loss.item(), self.total_training_steps)
-
-        # Log weights and gradients
-        for name, param in self.model.named_parameters():
-            self.writer.add_histogram(f'{name}/weights', param.data.cpu().numpy(), self.total_training_steps)
-            if param.grad is not None:
-                self.writer.add_histogram(f'{name}/grads', param.grad.data.cpu().numpy(), self.total_training_steps)
-
-        self.total_training_steps += 1
-        self.log_metrics(ep, total_reward, loss, self.policy.epsilon)  # Custom method to log relevant metrics
-        return loss.item()
-
-    # Update the target network with weights from the main model
-    def update_target_model(self):
-        self.target_model.load_state_dict(self.model.state_dict())
-
-    def log_epsilon(self):
-        self.writer.add_scalar('Epsilon', self.policy.epsilon, self.total_training_steps)
-
-    def close_writer(self):
-        self.writer.close()
-
-    def log_metrics(self, episode, rewards, loss=None, epsilon=None):
-        """
-        Log training metrics to TensorBoard.
-        """
-        self.writer.add_scalar('Reward/Episode', rewards, episode)
-        # self.writer.add_scalar('Victory Points/Episode', victory_points, episode)
-        if loss is not None:
-            self.writer.add_scalar('Loss/Episode', loss, episode)
-        if epsilon is not None:
-            self.writer.add_scalar('Epsilon/Episode', epsilon, episode)
