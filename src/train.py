@@ -185,7 +185,8 @@ for iteration in range(num_iterations):
         dice = 0
         while True:
             num_turns += 1
-            print(num_turns)
+            #
+            # print(num_turns)
             current_player = game.players[current_player_num]
             current_feats = Features(game, current_player)
             current_state = current_feats.flattenFeature(game, game.players[current_player_num])  # get the current state before action
@@ -243,7 +244,7 @@ for iteration in range(num_iterations):
                         valid_coords = game.board.get_valid_settlement_coords(current_player)
                         if not valid_coords:
                             continue
-                        print("Player %d is building a settlement" % (current_player_num + 1))
+                        #print("Player %d is building a settlement" % (current_player_num + 1))
                         coords = agents[current_player_num].place_settlement(game, current_player_num, is_start)
                         game.build_settlement(current_player, coords)
                         turn_reward += 5  # turn reward for the VP earned from settlement
@@ -253,7 +254,7 @@ for iteration in range(num_iterations):
                         valid_coords = game.board.get_valid_city_coords(current_player)
                         # coords = choose_intersection(valid_coords, "Where do you want to build a city?  ", game, renderer)
                         coords = agents[current_player_num].place_city_func(game, valid_coords)
-                        print("Player %d is building a city" % (current_player_num + 1))
+                        #print("Player %d is building a city" % (current_player_num + 1))
                         game.upgrade_settlement_to_city(current_player, coords)
                         turn_reward += 5  # turn reward for the VP earned from the city
                     elif building_choice == 3:
@@ -263,12 +264,12 @@ for iteration in range(num_iterations):
                         if not valid_coords:
                             continue
                         path_coords = agents[current_player_num].place_road(game, current_player_num, is_start)
-                        print("Player %d is building a road" % (current_player_num + 1))
+                        #print("Player %d is building a road" % (current_player_num + 1))
                         game.build_road(current_player, path_coords)
                     elif building_choice == 4:
                         if not current_player.has_resources(DevelopmentCard.get_required_resources()):
                             continue
-                        print("Player %d is buying a card" % (current_player_num + 1))
+                        #print("Player %d is buying a card" % (current_player_num + 1))
                         dev_card = game.build_development_card(current_player)
                     elif building_choice == 5:
                         break
@@ -277,7 +278,7 @@ for iteration in range(num_iterations):
                     possible_trades = list(current_player.get_possible_trades())
                     # trade_choice = int(input('->  '))
                     trade = agents[current_player_num].choose_trade_func(game, current_player_num, possible_trades)
-                    print("Player %d is trading" % (current_player_num + 1))
+                    #print("Player %d is trading" % (current_player_num + 1))
                     if trade == None:
                         print('woa')
                     current_player.add_resources(trade)
@@ -285,7 +286,7 @@ for iteration in range(num_iterations):
                     dev_cards = [card for card, amount in current_player.development_cards.items() if
                                  amount > 0 and card is not DevelopmentCard.VICTORY_POINT]
                     card_to_play = DevelopmentCard.KNIGHT
-                    print("Player %d is playing a knight" % (current_player_num + 1))
+                    #print("Player %d is playing a knight" % (current_player_num + 1))
                     game.play_development_card(current_player, card_to_play)
                     if card_to_play is DevelopmentCard.KNIGHT:
                         hex_coords, player_stolen = agents[current_player_num].place_robber(game, current_player_num)
