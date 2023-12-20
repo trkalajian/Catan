@@ -91,10 +91,10 @@ class EpsilonGreedyPolicy:
 class DQNNetwork(nn.Module):
     def __init__(self, input_size, output_size):
         super(DQNNetwork, self).__init__()
-        self.fc1 = nn.Linear(input_size, 64)
+        self.fc1 = nn.Linear(input_size, 128)
         self.relu = nn.ReLU()
-        self.fc2 = nn.Linear(64, 32)
-        self.fc3 = nn.Linear(32, output_size)
+        self.fc2 = nn.Linear(128, 64)
+        self.fc3 = nn.Linear(64, output_size)
 
     def forward(self, x):
         x = self.relu(self.fc1(x))

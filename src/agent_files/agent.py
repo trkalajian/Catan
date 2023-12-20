@@ -2,11 +2,13 @@
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
+from torch.utils.tensorboard import SummaryWriter
 import random
 import numpy as np
 from agent_files.DQN import DQNNetwork, ExperienceReplay, EpsilonGreedyPolicy
 from features import Features  # Import the Features class
 from collections import namedtuple
+
 
 Transition = namedtuple('Transition', ('state', 'action', 'next_state', 'reward', 'done'))
 
@@ -52,7 +54,7 @@ class DQNAgent(HeuristicAgent):
     # Initialize the DQN Agent
     def __init__(self, input_size, output_size, place_settlement_func, place_road_func, place_robber_func,
                  choose_best_trade, place_city_func, memory_size=500, batch_size=32, gamma=0.99, epsilon=1.0,
-                 epsilon_min=0.01, epsilon_decay=0.995, learning_rate=0.001):
+                 epsilon_min=0.01, epsilon_decay=0.995, learning_rate=0.001, log_dir="runs/DQNAgent"):
         super().__init__(self.dqn_policy, place_settlement_func, place_road_func, place_robber_func, choose_best_trade,
                          place_city_func)
 
@@ -66,6 +68,10 @@ class DQNAgent(HeuristicAgent):
 
         # Define the epsilon-greedy policy for action selection
         self.policy = EpsilonGreedyPolicy(self.model, epsilon, epsilon_min, epsilon_decay)
+
+        # Methods to visualize agent training
+        self.writer = SummaryWriter(log_dir=log_dir)
+        self.total_training_steps = 0
 
         # Initialize training parameters
         self.batch_size = batch_size
@@ -97,7 +103,7 @@ class DQNAgent(HeuristicAgent):
         return np.array(state, dtype=np.float32)
 
     # Training step for the DQN agent
-    def train(self):
+    def train(self, ep, total_reward):
         # Check if the memory is sufficient for training
         if len(self.experience_replay.memory) < self.batch_size:
             return
@@ -136,8 +142,35 @@ class DQNAgent(HeuristicAgent):
         # Update epsilon for the epsilon-greedy policy
         self.policy.decay_epsilon()
 
+        self.writer.add_scalar('Loss/train', loss.item(), self.total_training_steps)
+
+        # Log weights and gradients
+        for name, param in self.model.named_parameters():
+            self.writer.add_histogram(f'{name}/weights', param.data.cpu().numpy(), self.total_training_steps)
+            if param.grad is not None:
+                self.writer.add_histogram(f'{name}/grads', param.grad.data.cpu().numpy(), self.total_training_steps)
+
+        self.total_training_steps += 1
+        self.log_metrics(ep, total_reward, loss, self.policy.epsilon)  # Custom method to log relevant metrics
+        return loss.item()
+
     # Update the target network with weights from the main model
     def update_target_model(self):
         self.target_model.load_state_dict(self.model.state_dict())
 
+    def log_epsilon(self):
+        self.writer.add_scalar('Epsilon', self.policy.epsilon, self.total_training_steps)
 
+    def close_writer(self):
+        self.writer.close()
+
+    def log_metrics(self, episode, rewards, loss=None, epsilon=None):
+        """
+        Log training metrics to TensorBoard.
+        """
+        self.writer.add_scalar('Reward/Episode', rewards, episode)
+        # self.writer.add_scalar('Victory Points/Episode', victory_points, episode)
+        if loss is not None:
+            self.writer.add_scalar('Loss/Episode', loss, episode)
+        if epsilon is not None:
+            self.writer.add_scalar('Epsilon/Episode', epsilon, episode)
