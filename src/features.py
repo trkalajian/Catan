@@ -55,7 +55,8 @@ class Features():
                     game.board.get_valid_settlement_coords(game.players[i]))
                 # Initialize intersection_states
                 self.intersection_states = np.zeros((54))  # 54 intersections, 8 features each
-
+                
+        # UNCOMMENT FOR INTERSECTION FEATURES. CHANGES FLATTENED FEATURTED FROM 44 TO 98
         # for i, coord in enumerate(game.board.intersections.keys()):
         #     intersection = game.board.intersections[coord]
         #     connected_hexes = game.board.get_hexes_connected_to_intersection(coord)
@@ -136,9 +137,10 @@ class Features():
                         self.featuresArray.append(self.averageYieldOpposingPlayers[plr][resource])
                     else:
                         self.featuresArray.append(0)
-
-        flattened_intersections = self.intersection_states.flatten()
-        self.featuresArray.extend(flattened_intersections)
+        
+        # UNCOMMENT FOR INTERSECTION FEATURES. CHANGES FLATTENED FEATURTED FROM 44 TO 98
+        # flattened_intersections = self.intersection_states.flatten() 
+        # self.featuresArray.extend(flattened_intersections)
 
         return self.featuresArray
 
