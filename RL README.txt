@@ -2,6 +2,8 @@ Authors: Gyde Lund and Taylor Kalajian
 Class: CS138 - RL Tufts Univerisity
 Catan Final Project
 
+SRC Directory contains the following:
+
 Packages Required to be up to day as of DEC 2023: pickle, PyTorch, Numpy, Colored (for board print outs), numdifftools
 
 Main Training Loop: train.py
