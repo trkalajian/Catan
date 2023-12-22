@@ -11,6 +11,8 @@ Use train.py to run a training session. From the file select what agent types yo
 
 agent_files directory contains files relevant to the DQN and heuristic Agents (actor critic had its own structure)
 
+features contains functions to extract and normalize features for calculating the state-action space
+
 pycatan directory contains the game files
 
 methods.py includes various game methods removed from train.py to make room for the training code. 
